@@ -9,11 +9,12 @@ class PieceMover
   def_delegators :@site, :owner, :strength, :production, :location,
                          :neutral?, :enemy?, :mine?, :victim?
 
-  def initialize(site, map, default_direction = :north)
+  def initialize(site, map, default_direction = :north, search_distance = 2)
     @site = site
     @map = map
     @neighbors = map.neighbors(location)
     @default_direction = default_direction
+    @search_distance = search_distance
   end
 
   def calculate_move
@@ -30,7 +31,7 @@ class PieceMover
   end
 
   def most_interesting
-    nearby = map.fetch_nearby(location, 5)
+    nearby = map.fetch_nearby(location, @search_distance)
     attackable = nearby.select{|s| s.victim?(owner) }
 
     if attackable.empty?
