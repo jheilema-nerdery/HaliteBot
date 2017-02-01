@@ -9,8 +9,11 @@ decisionmaker = Decisionmaker.new(network)
 counter = 0
 
 while true
-  moves = []
   network.frame
+
+  counter += 1
+  decisionmaker.reset_turn
+  decisionmaker.rotate_direction if counter % 20 == 0
 
   map.content.values.each do |site|
     if site.owner == tag
@@ -19,8 +22,5 @@ while true
   end
 
   network.send_moves(decisionmaker.moves)
-  counter += 1
-  decisionmaker.reset_moves
-  decisionmaker.rotate_direction if counter % 20 == 0
 end
 

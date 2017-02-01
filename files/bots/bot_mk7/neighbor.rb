@@ -5,7 +5,7 @@ class Neighbor
 
   attr_accessor :direction
 
-  def_delegators :@site, :owner, :strength, :production, :location
+  def_delegators :@site, :owner, :strength, :production, :location, :interesting
 
   def initialize(site, direction)
     @site = site

@@ -12,4 +12,11 @@ class Site
     strength < 5 || (strength < 5*production)
   end
 
+  def interesting
+    if strength == 0
+      return production**2
+    end
+    (production**2).to_f/strength
+  end
+
 end

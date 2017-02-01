@@ -1,16 +1,16 @@
 require 'neighbor'
 
 class Decisionmaker
-  attr_accessor :map, :moves
+  attr_accessor :map, :moves, :network
 
   def initialize(network)
     @network = network
     @map = network.map
-    @max_distance = ([map.width, map.height].max / 1.5).ceil;
+    @owners = map.owners
+    @max_distance = ([map.width, map.height].max / @owners).ceil;
     @direction = :north
     @counter = 0
     @moves = []
-    identify_interesting_locations
   end
 
   def rotate_direction
@@ -19,7 +19,7 @@ class Decisionmaker
     @direction = GameMap::CARDINALS[@counter]
   end
 
-  def reset_moves
+  def reset_turn
     @moves = []
   end
 
@@ -29,23 +29,20 @@ class Decisionmaker
 
   private
 
-  def identify_interesting_locations
-    map
-  end
-
   def calculate_move(site)
-    @neighbors = nil
+    @neighbors = map.neighbors(site.location)
     @site = site
 
     if @site.is_weak?
       return Move.new(@site.location, :still)
     end
 
-    if are_allies?(neighbors)
-      return move_to_nearest_edge
+    nearby = map.fetch_nearby(@site.location, 3)
+    if nearby.all?{|s| s.owner == 0 || s.owner == @site.owner }
+      return move_to_most_interesting(nearby)
     end
 
-    enemies = neighbors.select{|s| s.owner != @site.owner }
+    enemies = @neighbors.select{|s| s.owner != @site.owner }
     sorted = enemies.sort{|a,b| heuristic(b) <=> heuristic(a) }
 
     best_attack = sorted.first
@@ -54,6 +51,23 @@ class Decisionmaker
     end
 
     Move.new(@site.location, :still)
+  end
+
+  def move_to_most_interesting(nearby)
+    neutral     = nearby.select{|s| s.owner == 0 }
+    sorted      = neutral.sort{|a,b| b.interesting <=> a.interesting }
+    interesting = sorted.first
+
+    if interesting.nil?
+      return move_to_nearest_edge
+    end
+
+    neighbor = @neighbors.find{|s| s.direction == interesting.direction }
+    if neighbor.strength >= @site.strength
+      return Move.new(@site.location, :still)
+    end
+
+    return Move.new(@site.location, interesting.direction)
   end
 
   def move_to_nearest_edge
@@ -99,10 +113,6 @@ class Decisionmaker
 
   def are_allies?(neighbors)
     neighbors.all?{|s| s.owner == @site.owner }
-  end
-
-  def neighbors
-    @neighbors ||= map.neighbors(@site.location)
   end
 
 end

@@ -3,12 +3,13 @@ class GameMap
   CARDINALS = [:north, :east, :south, :west]
   DIRECTIONS = [:still] + CARDINALS
 
-  attr_reader :width, :height
+  attr_reader :width, :height, :owners
   attr_reader :content
 
   def initialize(options = {})
     @width = options[:width]
     @height = options[:height]
+    @owners = options[:owners].uniq.length - 1
     @content = {}
 
     options[:owners].each_with_index do |owner, index|
@@ -44,6 +45,47 @@ class GameMap
     end
   end
 
+  def fetch_nearby(location, distance)
+    (1...distance).map do |dist|
+      CARDINALS.map do |cardinal|
+        (0..(dist*2-1)).map do |count|
+          case cardinal
+          when :north
+            x = location.x + count - dist
+            y = location.y - dist
+          when :south
+            x = location.x - count + dist
+            y = location.y + dist
+          when :east
+            x = location.x + dist
+            y = location.y - count + dist
+          when :west
+            x = location.x - dist
+            y = location.y + count - dist
+          end
+          Neighbor.new(site(fetch_in_bounds(x, y)), cardinal)
+        end
+      end
+    end.flatten
+  end
+
+  def fetch_in_bounds(x, y)
+    if x >= width - 1
+      x = x - width
+    end
+    if x < 0
+      x = x + width
+    end
+
+    if y >= height - 1
+      y = y - height
+    end
+    if y < 0
+      y = y + height
+    end
+    Location.new(x, y)
+  end
+
   def find_location(location, direction)
     x, y = location.x, location.y
 
@@ -72,6 +114,31 @@ class GameMap
   end
 
   def angle_between(from, to)
+    dx, dy = deltas(from, to)
+    Math.atan2(dy, dx)
+  end
+
+  def direction(from, to)
+    dx, dy = deltas(from, to)
+
+    if dx >= dy
+      if dx < 0
+        return :east
+      end
+      return :west
+    end
+
+    if dy < 0
+      return :south
+    end
+    return :north
+  end
+
+  def in_bounds(loc)
+    loc.x.between?(0, width - 1) && loc.y.between?(0, height - 1)
+  end
+
+  def deltas(from, to)
     dx = to.x - from.x
     dy = to.y - from.y
 
@@ -86,12 +153,7 @@ class GameMap
     elsif -dy > height + dy
       dy += height
     end
-
-    Math.atan2(dy, dx)
-  end
-
-  def in_bounds(loc)
-    loc.x.between?(0, width - 1) && loc.y.between?(0, height - 1)
+    [dx, dy]
   end
 
 end
