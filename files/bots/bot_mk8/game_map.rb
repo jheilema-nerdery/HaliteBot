@@ -48,22 +48,22 @@ class GameMap
   def fetch_nearby(location, distance)
     (1...distance).map do |dist|
       CARDINALS.map do |cardinal|
-        (0..(dist*2-1)).map do |count|
+        (-dist...dist).map do |count|
           case cardinal
           when :north
-            x = location.x + count - dist
+            x = location.x + count
             y = location.y - dist
           when :south
-            x = location.x - count + dist
+            x = location.x + count
             y = location.y + dist
           when :east
             x = location.x + dist
-            y = location.y - count + dist
+            y = location.y + count
           when :west
             x = location.x - dist
-            y = location.y + count - dist
+            y = location.y + count
           end
-          Neighbor.new(site(fetch_in_bounds(x, y)), cardinal)
+          Neighbor.new(site(fetch_in_bounds(x, y)), cardinal, dist)
         end
       end
     end.flatten

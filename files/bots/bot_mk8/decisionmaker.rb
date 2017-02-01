@@ -54,20 +54,29 @@ class Decisionmaker
   end
 
   def move_to_most_interesting(nearby)
-    neutral     = nearby.select{|s| s.owner == 0 }
-    sorted      = neutral.sort{|a,b| b.interesting <=> a.interesting }
-    interesting = sorted.first
+    neutral        = nearby.select{|s| s.neutral? }
 
-    if interesting.nil?
+    if neutral.empty?
       return move_to_nearest_edge
     end
 
-    neighbor = @neighbors.find{|s| s.direction == interesting.direction }
-    if neighbor.strength >= @site.strength
+    group_by_dir   = neutral.group_by(&:direction)
+    @network.log(group_by_dir, :debug)
+    sums_of_scores = group_by_dir.each_with_object({}) {|(k, v), h| h[k] = v.map(&:interesting).reduce(:+) }
+    @network.log(sums_of_scores, :debug)
+    interestingest_direction = sums_of_scores.max_by(&:last).first
+    @network.log(interestingest_direction, :debug)
+
+    if interestingest_direction.nil?
+      return move_to_nearest_edge
+    end
+
+    neighbor = @neighbors.find{|s| s.direction == interestingest_direction }
+    if neighbor.neutral? && neighbor.strength >= @site.strength
       return Move.new(@site.location, :still)
     end
 
-    return Move.new(@site.location, interesting.direction)
+    return Move.new(@site.location, interestingest_direction)
   end
 
   def move_to_nearest_edge

@@ -19,4 +19,8 @@ class Site
     (production**2).to_f/strength
   end
 
+  def neutral?
+    owner == 0
+  end
+
 end
