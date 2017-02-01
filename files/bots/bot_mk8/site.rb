@@ -23,4 +23,16 @@ class Site
     owner == 0
   end
 
+  def enemy?(me)
+    owner != me && owner != 0
+  end
+
+  def mine?(me)
+    owner == me
+  end
+
+  def victim?(me)
+    owner != me
+  end
+
 end
