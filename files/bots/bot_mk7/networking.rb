@@ -32,7 +32,7 @@ class Networking
 
   # getFrame
   def frame
-    init_map
+    update_map_data
   end
 
   # sendMoves
@@ -70,6 +70,21 @@ class Networking
   end
 
   def init_map
+    data, owners_map = fetch_map_data
+    @map = GameMap.new( width: width,
+                        height: height,
+                        owners: owners_map,
+                        strengths: data,
+                        production: production)
+  end
+
+  def update_map_data
+    strengths, owners_map = fetch_map_data
+    @map.update( owners_map,
+                 strengths )
+  end
+
+  def fetch_map_data
     data = read_ints_from_input
 
     owners_map = []
@@ -79,11 +94,7 @@ class Networking
       owners_map += [owner] * counter
     end
 
-    @map = GameMap.new( width: width,
-                        height: height,
-                        owners: owners_map,
-                        strengths: data,
-                        production: production)
+    return data, owners_map
   end
 
   def read_from_input

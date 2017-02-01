@@ -1,9 +1,15 @@
 class Site
+  attr_accessor :owner, :strength, :production, :location
 
-  attr_reader :owner, :strength, :production
+  def initialize(args)
+    @owner = args[:owner]
+    @strength = args[:strength]
+    @production = args[:production]
+    @location = args[:location]
+  end
 
-  def initialize(owner = 0, strength = 0, production = 0)
-    @owner, @strength, @production = owner, strength, production
+  def is_weak?
+    strength < 5 || (strength < 5*production)
   end
 
 end

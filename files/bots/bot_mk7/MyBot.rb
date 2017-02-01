@@ -10,22 +10,17 @@ counter = 0
 
 while true
   moves = []
-  map = network.frame
-  decisionmaker.map = map
+  network.frame
 
-  (0...map.height).each do |y|
-    (0...map.width).each do |x|
-      loc = Location.new(x, y)
-      site = map.site(loc)
-
-      if site.owner == tag
-        moves << decisionmaker.move(site, loc)
-      end
+  map.content.values.each do |site|
+    if site.owner == tag
+      decisionmaker.move(site)
     end
   end
 
-  network.send_moves(moves)
+  network.send_moves(decisionmaker.moves)
   counter += 1
+  decisionmaker.reset_moves
   decisionmaker.rotate_direction if counter % 20 == 0
 end
 

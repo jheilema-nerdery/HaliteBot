@@ -1,12 +1,16 @@
+require 'neighbor'
+
 class Decisionmaker
-  attr_accessor :map
+  attr_accessor :map, :moves
 
   def initialize(network)
     @network = network
     @map = network.map
-    @max_distance = ([map.width, map.height].max / 2).ceil;
+    @max_distance = ([map.width, map.height].max / 1.5).ceil;
     @direction = :north
     @counter = 0
+    @moves = []
+    identify_interesting_locations
   end
 
   def rotate_direction
@@ -15,27 +19,41 @@ class Decisionmaker
     @direction = GameMap::CARDINALS[@counter]
   end
 
-  def move(site, location)
+  def reset_moves
+    @moves = []
+  end
+
+  def move(site)
+    @moves << calculate_move(site)
+  end
+
+  private
+
+  def identify_interesting_locations
+    map
+  end
+
+  def calculate_move(site)
     @neighbors = nil
-    @location = location
     @site = site
 
-    if is_weak?
-      return Move.new(@location, :still)
+    if @site.is_weak?
+      return Move.new(@site.location, :still)
     end
 
     if are_allies?(neighbors)
       return move_to_nearest_edge
     end
 
-    enemies = neighbors.select{|dir, s| s.owner != @site.owner }.to_a
+    enemies = neighbors.select{|s| s.owner != @site.owner }
     sorted = enemies.sort{|a,b| heuristic(b) <=> heuristic(a) }
+
     best_attack = sorted.first
-    if !best_attack.nil? && @site.strength > best_attack[1].strength
-      return Move.new(location, best_attack[0])
+    if !best_attack.nil? && @site.strength > best_attack.strength
+      return Move.new(@site.location, best_attack.direction)
     end
 
-    Move.new(location, :still)
+    Move.new(@site.location, :still)
   end
 
   def move_to_nearest_edge
@@ -44,7 +62,7 @@ class Decisionmaker
 
     GameMap::CARDINALS.shuffle.each do |current_direction|
       vector_length = 0
-      pointer = @location
+      pointer = @site.location
       next_site = map.site(pointer, current_direction);
       while (next_site.owner == @site.owner && vector_length < farthest_distance) do
         vector_length += 1
@@ -58,24 +76,19 @@ class Decisionmaker
       end
     end
 
-    Move.new(@location, direction)
+    Move.new(@site.location, direction)
   end
 
-  def heuristic(enemy_data)
-    direction = enemy_data[0]
-    enemy = enemy_data[1]
-
+  def heuristic(enemy)
     # take over a neutral site
     if enemy.owner == 0 && enemy.strength != 0
       return enemy.production
     end
 
-    # attack an enemy
     totalDamage = enemy.strength;
-    location = map.find_location(@location, direction)
 
     GameMap::CARDINALS.shuffle.each do |cardinal|
-      sibling = map.site(location, cardinal);
+      sibling = map.site(enemy.location, cardinal);
       if (sibling.owner != 0 && sibling.owner != @site.owner)
         totalDamage += sibling.strength
       end
@@ -85,19 +98,11 @@ class Decisionmaker
   end
 
   def are_allies?(neighbors)
-    neighbors.values.all?{|s| s.owner == @site.owner }
-  end
-
-  def alone?
-    neighbors.values.none?{|s| s.owner == @site.owner }
-  end
-
-  def is_weak?
-    @site.strength < 5 || (@site.strength < 5 * @site.production)
+    neighbors.all?{|s| s.owner == @site.owner }
   end
 
   def neighbors
-    @neighbors ||= map.neighbors(@location)
+    @neighbors ||= map.neighbors(@site.location)
   end
 
 end

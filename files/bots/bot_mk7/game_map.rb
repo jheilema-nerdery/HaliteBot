@@ -9,26 +9,39 @@ class GameMap
   def initialize(options = {})
     @width = options[:width]
     @height = options[:height]
-    @content = []
+    @content = {}
 
-    options[:owners].each_with_index do |owner, idx|
-      site = Site.new(owner, options[:strengths][idx], options[:production][idx])
-      y, x = idx.divmod(@width)
+    options[:owners].each_with_index do |owner, index|
+      y, x = index.divmod(@width)
 
-      @content[y] ||= []
-      @content[y][x] = site
+      site = Site.new({
+        owner: owner,
+        strength: options[:strengths][index],
+        production: options[:production][index],
+        location: Location.new(x, y)
+      })
+
+      @content["#{y}_#{x}"] = site
+    end
+  end
+
+  def update(owner_data, strength_data)
+    owner_data.each_with_index do |owner, index|
+      y, x = index.divmod(@width)
+      @content["#{y}_#{x}"].owner = owner
+      @content["#{y}_#{x}"].strength = strength_data[index]
     end
   end
 
   def site(location, direction = :still)
-    new_location = find_location(location, direction)
-    content[new_location.y][new_location.x]
+    new_loc = find_location(location, direction)
+    content["#{new_loc.y}_#{new_loc.x}"]
   end
 
   def neighbors(location)
     CARDINALS.map do |direction|
-      [direction, site(location, direction)]
-    end.to_h
+      Neighbor.new(site(location, direction), direction)
+    end
   end
 
   def find_location(location, direction)
