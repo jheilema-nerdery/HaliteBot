@@ -11,32 +11,23 @@ class PieceMover
   def_delegators :@site, :owner, :strength, :production, :location,
                          :neutral?, :enemy?, :mine?, :victim?
 
-  def initialize(site, map, default_direction = :north, game_stage = :early)
+  def initialize(site, map, default_direction = :north)
     @site = site
     @map = map
     @neighbors = []
     @default_direction = default_direction
-    @game_stage = game_stage
     @search_distance = 2
   end
 
   def calculate_move
-    @neighbors = map.neighbors(location)
-
-    border = @neighbors.select{|s| s.strength == 0 && s.neutral? }
-    if border.length > 0
-      raise 'crash!'
+    if site.is_weak?
+      return Move.new(location, :still)
     end
 
-    if @game_stage == :early
-      if site.is_weak?
-        return Move.new(location, :still)
-      end
-
-      best_nearby = most_interesting
-      if best_nearby
-        return Move.new(location, best_nearby)
-      end
+    @neighbors = map.neighbors(location)
+    best_nearby = most_interesting
+    if best_nearby
+      return Move.new(location, best_nearby)
     end
 
     return Move.new(location, :still)

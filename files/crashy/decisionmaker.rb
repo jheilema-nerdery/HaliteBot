@@ -1,7 +1,7 @@
 require 'piece_mover'
 
 class Decisionmaker
-  attr_accessor :map, :moves, :network
+  attr_accessor :map, :moves, :network, :game_stage
   EARLY = 90
   LATE = 20
 
@@ -35,7 +35,11 @@ class Decisionmaker
   end
 
   def move(site)
-    mover = PieceMover.new(site, map, @direction, game_stage)
+    raise 'crash' if map.neighbors(site.location).select{|s| s.strength == 0 && s.neutral? }.length > 0
+
+    return if @game_stage != :early
+
+    mover = PieceMover.new(site, map, @direction)
     @moves << mover.calculate_move
   end
 
@@ -43,18 +47,5 @@ class Decisionmaker
     SEARCH_DISTANCES[game_stage]
   end
 
-  def game_stage
-    @game_stage ||= begin
-      num_neutral = map.content.values.select{|v| v.neutral? }
-      percent     = (num_neutral.length.to_f/map.content.length) * 100
-      if percent > EARLY
-        :early
-      elsif percent < LATE
-        :late
-      else
-        :mid
-      end
-    end
-  end
 
 end
