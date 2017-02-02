@@ -48,7 +48,7 @@ class GameMap
   def fetch_nearby(location, distance)
     (1...distance).map do |dist|
       CARDINALS.map do |cardinal|
-        (-dist...dist).map do |count|
+        (-dist..dist).map do |count|
           case cardinal
           when :north
             x = location.x + count
