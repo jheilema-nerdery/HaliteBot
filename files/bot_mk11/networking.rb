@@ -75,7 +75,8 @@ class Networking
                         height: height,
                         owners: owners_map,
                         strengths: data,
-                        production: production)
+                        production: production,
+                        player: @player_tag)
   end
 
   def update_map_data

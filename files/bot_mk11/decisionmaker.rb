@@ -1,29 +1,21 @@
 require 'piece_mover'
 
 class Decisionmaker
-  attr_accessor :map, :moves, :network
-  EARLY = 60
+  attr_accessor :map, :moves, :network, :player
+  EARLY = 70
   LATE = 20
 
   SEARCH_DISTANCES = {
-    early: 6,
-    mid:   4,
-    late:  2
+    early: 4,
+    mid:   5,
+    late:  5
   }
 
-  def initialize(network)
-    @network = network
-    @map = network.map
-    @direction = :north
-    @game_stage = :early
-    @counter = 0
-    @moves = []
-  end
+  def initialize(network, player, map)
+    @network, @player, @map = network, player, map
 
-  def rotate_direction
-    @counter += 1
-    @counter = 0 if @counter >= 4
-    @direction = GameMap::CARDINALS[@counter]
+    @game_stage = :early
+    @moves = []
   end
 
   def reset_turn
@@ -31,8 +23,15 @@ class Decisionmaker
     @game_stage = nil
   end
 
+  def make_decisions
+    mine = map.content.values.select{|s| s.owner == @player }
+    mine.each do |site|
+      move(site)
+    end
+  end
+
   def move(site)
-    mover = PieceMover.new(site, map, @direction, search_distance)
+    mover = PieceMover.new(site, map, search_distance)
     @moves << mover.calculate_move
   end
 

@@ -17,6 +17,7 @@ class GameMap
 
       site = Site.new({
         owner: owner,
+        player: options[:player],
         strength: options[:strengths][index],
         production: options[:production][index],
         location: Location.new(x, y)

@@ -7,13 +7,12 @@ class PieceMover
   attr_accessor :site, :map, :neighbors
 
   def_delegators :@site, :owner, :strength, :production, :location,
-                         :neutral?, :enemy?, :mine?, :victim?
+                         :neutral?, :enemy?, :victim?
 
-  def initialize(site, map, default_direction = :north, search_distance = 2)
+  def initialize(site, map, search_distance = 2)
     @site = site
     @map = map
     @neighbors = map.neighbors(location)
-    @default_direction = default_direction
     @search_distance = search_distance
   end
 
@@ -32,7 +31,7 @@ class PieceMover
 
   def most_interesting
     nearby = map.fetch_nearby(location, @search_distance)
-    attackable = nearby.select{|s| s.victim?(owner) }
+    attackable = nearby.select{|s| s.victim? }
 
     if attackable.empty?
       return nearest_edge
@@ -57,7 +56,7 @@ class PieceMover
     end
 
     # in a warzone!
-    if neighbor.enemy?(owner) || (neighbor.neutral? && neighbor.strength == 0)
+    if neighbor.enemy? || (neighbor.neutral? && neighbor.strength == 0)
       return most_attackable
     end
 
@@ -65,7 +64,7 @@ class PieceMover
   end
 
   def most_attackable
-    enemies = neighbors.select{|s| s.victim?(site.owner) }
+    enemies = neighbors.select{|s| s.victim? }
     sorted = enemies.sort{|a,b| heuristic(b) <=> heuristic(a) }
 
     best_attack = sorted.first
@@ -85,7 +84,7 @@ class PieceMover
 
     GameMap::CARDINALS.shuffle.each do |cardinal|
       sibling = map.site(enemy.location, cardinal);
-      if sibling.enemy? @site.owner
+      if sibling.enemy?
         totalDamage += [sibling.strength, @site.strength].min
       end
     end
@@ -95,13 +94,13 @@ class PieceMover
 
   def nearest_edge
     farthest_distance = max_distance
-    direction = @default_direction
+    direction = [:south, :east].shuffle.first
 
-    GameMap::CARDINALS.shuffle.each do |current_direction|
+    GameMap::CARDINALS.each do |current_direction|
       vector_length = 0
       pointer = location
       next_site = map.site(pointer, current_direction);
-      while (next_site.owner == owner && vector_length < farthest_distance) do
+      while (next_site.owner == @site.owner && vector_length < farthest_distance) do
         vector_length += 1
         pointer = map.find_location(pointer, current_direction);
         next_site = map.site(pointer, current_direction);
