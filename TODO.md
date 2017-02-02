@@ -1,4 +1,4 @@
-[ ] create a 'crashy' bot that can collect some 255 squares and then crash
+[x] create a 'crashy' bot that can collect some 255 squares and then crash
 [ ] make sure my bot can account for crashy bots
 [ ] check for the swap-places bug :/
 [ ] don't waste strength on bad merges
@@ -11,3 +11,4 @@
 [ ] Machine learning, can it teach specifics about an algorythm? Weights of goal sites, most effective search areas, targeting enemies, how long should a piece wait until it moves?
 [ ] watch comparisons between str/territory/production + enemies. Change strategy depending.
 [ ] watch the speed of the map. Change strategy depending.
+[ ] pathfinding
