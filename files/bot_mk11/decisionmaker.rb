@@ -18,7 +18,6 @@ class Decisionmaker
     @game_stage = :early
     @counter = 0
     @moves = []
-    @network.log(search_distance, :debug)
   end
 
   def rotate_direction
