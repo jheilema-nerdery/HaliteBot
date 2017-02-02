@@ -5,6 +5,9 @@
 [ ] sort peices by strength/prod ratios, then move only a % of them?
 [ ] if there is a neutral piece between me & an enemy, wait.
 [ ] early vs mid-game should be keyed off of making contact w/ an enemy.
+[ ] early game: distance should be a stronger indicator
+[ ] very early game: own spaces shouldn't affect interestingness (encourage merging)
+[ ] very early game: enemy spaces should be a little more expensive
 
 [ ] revisit overkill and attack strategies
 [ ] identify valuable sites and then pathfind to them?
