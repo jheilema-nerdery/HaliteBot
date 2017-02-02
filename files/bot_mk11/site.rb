@@ -14,9 +14,9 @@ class Site
 
   def interesting
     if strength == 0
-      return production*2
+      return production**1.5
     end
-    (production*2).to_f/strength
+    (production**1.5).to_f/strength
   end
 
   def neutral?
