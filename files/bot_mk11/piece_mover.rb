@@ -3,7 +3,7 @@ require 'forwardable'
 
 class PieceMover
   extend Forwardable
-
+  MAX_STRENGTH = 255
   attr_accessor :site, :map, :neighbors
 
   def_delegators :@site, :owner, :strength, :production, :location,
@@ -47,8 +47,13 @@ class PieceMover
     end
 
     neighbor = neighbors.find{|s| s.direction == interestingest_direction }
-    if neighbor.neutral? && neighbor.strength >= strength
-      return :still
+    if neighbor.neutral?
+      if neighbor.strength == MAX_STRENGTH
+        return neighbor.direction
+      end
+      if neighbor.strength >= strength
+        return :still
+      end
     end
 
     # in a warzone!
