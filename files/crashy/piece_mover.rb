@@ -4,30 +4,46 @@ require 'forwardable'
 class PieceMover
   extend Forwardable
 
+  MAX_STRENGTH = 255
+
   attr_accessor :site, :map, :neighbors
 
   def_delegators :@site, :owner, :strength, :production, :location,
                          :neutral?, :enemy?, :mine?, :victim?
 
-  def initialize(site, map, default_direction = :north, search_distance = 2)
+  def initialize(site, map, default_direction = :north, game_stage = :early)
     @site = site
     @map = map
-    @neighbors = map.neighbors(location)
+    @neighbors = []
     @default_direction = default_direction
-    @search_distance = search_distance
+    @game_stage = game_stage
+    @search_distance = 2
   end
 
   def calculate_move
-    if site.is_weak?
-      return Move.new(location, :still)
+    @neighbors = map.neighbors(location)
+
+    border = @neighbors.select{|s| s.strength == 0 && s.neutral? }
+    if border.length > 0
+      raise 'crash!'
     end
 
-    best_nearby = most_interesting
-    if best_nearby
-      return Move.new(location, best_nearby)
+    if @game_stage == :early
+      if site.is_weak?
+        return Move.new(location, :still)
+      end
+
+      best_nearby = most_interesting
+      if best_nearby
+        return Move.new(location, best_nearby)
+      end
     end
 
-    Move.new(location, :still)
+    return Move.new(location, :still)
+  end
+
+  def max_distance
+    ([map.width, map.height].max / 1.5).ceil;
   end
 
   def most_interesting
@@ -114,5 +130,6 @@ class PieceMover
   def max_distance
     ([map.width, map.height].max / 1.5).ceil;
   end
+
 
 end

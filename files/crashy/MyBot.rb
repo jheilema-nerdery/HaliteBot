@@ -2,7 +2,7 @@ $:.unshift(File.dirname(__FILE__))
 require 'networking'
 require 'decisionmaker'
 
-name = defined?(NAME) ? NAME : "Crashy"
+name = defined?(NAME) ? NAME : "CrashyBot"
 network = Networking.new(name)
 tag, map = network.configure
 decisionmaker = Decisionmaker.new(network)

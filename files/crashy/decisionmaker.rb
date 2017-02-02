@@ -2,7 +2,7 @@ require 'piece_mover'
 
 class Decisionmaker
   attr_accessor :map, :moves, :network
-  EARLY = 60
+  EARLY = 90
   LATE = 20
 
   SEARCH_DISTANCES = {
@@ -29,11 +29,13 @@ class Decisionmaker
 
   def reset_turn
     @moves = []
-    @game_stage = nil
+
+    num_mine = map.content.values.select{|v| v.mine?(network.player_tag) }.length
+    @game_stage = :mid if num_mine > 7
   end
 
   def move(site)
-    mover = PieceMover.new(site, map, @direction, search_distance)
+    mover = PieceMover.new(site, map, @direction, game_stage)
     @moves << mover.calculate_move
   end
 
