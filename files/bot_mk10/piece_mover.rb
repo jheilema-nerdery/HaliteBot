@@ -76,12 +76,12 @@ class PieceMover
       return enemy.production
     end
 
-    totalDamage = enemy.strength;
+    totalDamage = [enemy.strength, @site.strength].min;
 
     GameMap::CARDINALS.shuffle.each do |cardinal|
       sibling = map.site(enemy.location, cardinal);
-      if (sibling.owner != 0 && sibling.owner != @site.owner)
-        totalDamage += sibling.strength
+      if sibling.enemy? @site.owner
+        totalDamage += [sibling.strength, @site.strength].min
       end
     end
 
