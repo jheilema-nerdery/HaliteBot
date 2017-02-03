@@ -12,11 +12,9 @@ class Networking
   attr_reader :production
   attr_reader :name, :map
 
-  def initialize(name)
+  def initialize
     # implicit IO flush
     $stdout.sync = true
-
-    @name = name
 
     init_player_tag
     init_map_size
@@ -26,7 +24,7 @@ class Networking
 
   # getInit/sendInit
   def configure
-    write_to_output(name)
+    write_to_output(NAME)
     [player_tag, @map]
   end
 
@@ -40,16 +38,19 @@ class Networking
     write_to_output(moves.join(' '))
   end
 
-  def logger
-    @logger ||= Logger.new("bot-#{name}.log").tap do |l|
+  def self.logger
+    @@logger ||= Logger.new("bot-#{NAME}.log").tap do |l|
       l.formatter = proc do |severity, datetime, progname, msg|
         "#{datetime.strftime("%Y-%m-%d %H:%M:%S.%6N")} - #{severity} - #{msg}\n"
       end
     end
   end
+  def self.log(msg, severity = :info)
+    logger.send(severity, msg)
+  end
 
   def log(msg, severity = :info)
-    logger.send(severity, msg)
+    Networking.log(msg, severity)
   end
 
   private

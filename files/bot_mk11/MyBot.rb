@@ -2,9 +2,9 @@ $:.unshift(File.dirname(__FILE__))
 require 'networking'
 require 'decisionmaker'
 
-name = defined?(NAME) ? NAME : "RubyBotMk11"
+NAME = "RubyBotMk11"
 
-network = Networking.new(name)
+network = Networking.new
 player, map = network.configure
 decisionmaker = Decisionmaker.new(network, player, map)
 
