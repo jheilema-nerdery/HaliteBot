@@ -13,9 +13,9 @@ class Site
 
   def add_move(direction)
     if direction == :still
-      @moves << Move.new(location, :still)
+      @moves << Move.new(location, :still, self)
     else
-      neighbors[direction].moves << Move.new(location, direction)
+      neighbors[direction].moves << Move.new(location, direction, self)
     end
   end
 
@@ -39,15 +39,15 @@ class Site
   end
 
   def enemy?
-    owner != @player && owner != 0
+    !friendly? && !neutral?
   end
 
-  def mine?
+  def friendly?
     owner == @player
   end
 
   def victim?
-    owner != @player
+    neutral? || enemy?
   end
 
 end

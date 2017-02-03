@@ -24,7 +24,6 @@ class Decisionmaker
   end
 
   def moves
-    Networking.log(map.sites.map(&:moves).flatten)
     map.sites.map(&:moves).flatten
   end
 

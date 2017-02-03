@@ -6,7 +6,7 @@ class Neighbor
   attr_accessor :direction, :distance
 
   def_delegators :@site, :owner, :strength, :production, :location, :neighbors,
-                         :neutral?, :enemy?, :mine?, :victim?,
+                         :neutral?, :enemy?, :friendly?, :victim?,
                          :moves
 
   def initialize(site, direction, distance = 1)

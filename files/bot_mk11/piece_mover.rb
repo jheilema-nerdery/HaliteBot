@@ -49,14 +49,14 @@ class PieceMover
   end
 
   def most_attackable
-    enemies = @site.neighbors.values.select{|s| s.victim? }
-    sorted = enemies.sort{|a,b| attack_heuristic(b) <=> attack_heuristic(a) }
-    best_attack = sorted.first
+    nearby = @site.neighbors.values.select{|s| s.victim? }
+    sorted = nearby.sort_by{|site| [attack_heuristic(site), site.interesting] }
+    best = sorted.last
 
-    return :still if best_attack.nil?
-    return :still if best_attack.neutral? && @site.strength < best_attack.strength
+    return :still if best.nil?
+    return :still if best.neutral? && @site.strength < best.strength
 
-    best_attack.direction
+    best.direction
   end
 
   def interesting(attackable)
@@ -74,19 +74,25 @@ class PieceMover
     sums.max_by(&:last).first
   end
 
-  def attack_heuristic(enemy)
-    totalDamage = [enemy.strength, @site.strength].min;
+  def attack_heuristic(neighbor)
+    damage = 0
 
-    # take over a neutral site
-    if enemy.neutral?
-      totalDamage = 0
+    # prefer attacking then wasting energy on neutral blocks.
+    # if the neutral block is on the battlefront, it'll be zero and
+    # this won't matter.
+    if neighbor.neutral?
+      damage -= neighbor.strength/2
     end
 
-    enemy.neighbors.values.select(&:enemy?).each do |sibling|
-      totalDamage += [sibling.strength, @site.strength].min
+    if neighbor.enemy?
+      damage += [neighbor.strength, @site.strength].min
     end
 
-    return totalDamage;
+    neighbor.neighbors.values.select(&:enemy?).each do |sibling|
+      damage += [sibling.strength, @site.strength].min
+    end
+
+    return damage
   end
 
   def nearest_edge
