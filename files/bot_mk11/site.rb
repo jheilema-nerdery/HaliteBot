@@ -11,14 +11,18 @@ class Site
   end
 
   def is_weak?
-    strength < 10 || (strength < 5*production)
+    strength < 5 || (strength < 5*production)
   end
 
   def interesting
     if strength == 0
-      return production**1.7
+      return production**2
     end
-    (production**1.7).to_f/strength
+    (production**2).to_f/strength
+  end
+
+  def in_a_warzone?
+    @neighbors.values.any?{|s| s.strength == 0 && s.neutral? }
   end
 
   def neutral?

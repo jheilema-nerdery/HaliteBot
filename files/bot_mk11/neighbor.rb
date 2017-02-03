@@ -19,6 +19,10 @@ class Neighbor
     score/distance
   end
 
+  def near_an_enemy?
+    @neighbors.values.any?{|s| s.enemy? }
+  end
+
   def to_s
     "Neighbor #{direction} #{location.x} #{location.y}"
   end
