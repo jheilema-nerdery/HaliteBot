@@ -5,7 +5,7 @@ class Neighbor
 
   attr_accessor :direction, :distance
 
-  def_delegators :@site, :owner, :strength, :production, :location,
+  def_delegators :@site, :owner, :strength, :production, :location, :neighbors,
                          :neutral?, :enemy?, :mine?, :victim?
 
   def initialize(site, direction, distance = 1)
@@ -17,6 +17,10 @@ class Neighbor
   def interesting
     score = @site.interesting
     score/distance
+  end
+
+  def to_s
+    "Neighbor #{direction} #{location.x} #{location.y}"
   end
 
 end

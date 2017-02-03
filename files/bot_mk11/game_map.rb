@@ -25,6 +25,8 @@ class GameMap
 
       @content["#{y}_#{x}"] = site
     end
+
+    @content.values.each{|s| s.neighbors = neighbors(s.location) }
   end
 
   def update(owner_data, strength_data)
@@ -41,9 +43,11 @@ class GameMap
   end
 
   def neighbors(location)
+    neighbors = {}
     CARDINALS.map do |direction|
-      Neighbor.new(site(location, direction), direction)
+      neighbors[direction] = Neighbor.new(site(location, direction), direction)
     end
+    neighbors
   end
 
   def fetch_nearby(location, distance)

@@ -4,15 +4,13 @@ require 'forwardable'
 class PieceMover
   extend Forwardable
   MAX_STRENGTH = 255
-  attr_accessor :site, :map, :neighbors
+  attr_accessor :site, :map
 
-  def_delegators :@site, :owner, :strength, :production, :location,
-                         :neutral?, :enemy?, :victim?
+  def_delegators :@site, :location
 
   def initialize(site, map, search_distance = 2)
     @site = site
     @map = map
-    @neighbors = map.neighbors(location)
     @search_distance = search_distance
   end
 
@@ -21,72 +19,71 @@ class PieceMover
       return Move.new(location, :still)
     end
 
-    best_nearby = most_interesting
-    if best_nearby
-      return Move.new(location, best_nearby)
-    end
-
-    Move.new(location, :still)
-  end
-
-  def most_interesting
-    nearby = map.fetch_nearby(location, @search_distance)
-    attackable = nearby.select{|s| s.victim? }
+    attackable = map.fetch_nearby(location, @search_distance).select{|s| s.victim? }
 
     if attackable.empty?
-      return nearest_edge
+      return Move.new(location, nearest_edge)
     end
 
-    group_by_dir   = attackable.group_by(&:direction)
-    sums_of_scores = group_by_dir.each_with_object({}) {|(k, v), h| h[k] = v.map(&:interesting).reduce(:+) }
-    interestingest_direction = sums_of_scores.max_by(&:last).first
+    Move.new(location, most_interesting(attackable))
+  end
 
-    if interestingest_direction.nil?
-      return nearest_edge
+  def most_interesting(attackable)
+    if @site.in_a_warzone?
+      return most_attackable
     end
 
-    neighbor = neighbors.find{|s| s.direction == interestingest_direction }
+    interestingest_direction = interesting(attackable)
+    neighbor = @site.neighbors[interestingest_direction]
+
     if neighbor.neutral?
       if neighbor.strength == MAX_STRENGTH
-        return neighbor.direction
+        return interestingest_direction
       end
-      if neighbor.strength >= strength
+      if neighbor.strength >= @site.strength
         return :still
       end
-    end
-
-    # in a warzone!
-    if neighbor.enemy? || (neighbor.neutral? && neighbor.strength == 0)
-      return most_attackable
     end
 
     return interestingest_direction
   end
 
   def most_attackable
-    enemies = neighbors.select{|s| s.victim? }
-    sorted = enemies.sort{|a,b| heuristic(b) <=> heuristic(a) }
-
+    enemies = @site.neighbors.values.select{|s| s.victim? }
+    sorted = enemies.sort{|a,b| attack_heuristic(b) <=> attack_heuristic(a) }
     best_attack = sorted.first
-    if !best_attack.nil? && site.strength > best_attack.strength
-      return best_attack.direction
-    end
-    false
+
+    return :still if best_attack.nil?
+    return :still if best_attack.neutral? && @site.strength < best_attack.strength
+
+    best_attack.direction
   end
 
-  def heuristic(enemy)
-    # take over a neutral site
-    if enemy.owner == 0 && enemy.strength != 0
-      return enemy.production
+  def interesting(attackable)
+    # Get a hash of attackable objects grouped by the direction they're in
+    group_by_dir = attackable.group_by(&:direction)
+
+    # Sum the values of all the sites interestingness. Again, group by direction.
+    sums = {}
+    group_by_dir.map do |direction, sites|
+      sums[direction] = sites.map(&:interesting).reduce(:+)
     end
 
+    # convert to an array of arrays, select the maximum by the second value
+    # in the array, then return the first value (the direction!)
+    sums.max_by(&:last).first
+  end
+
+  def attack_heuristic(enemy)
     totalDamage = [enemy.strength, @site.strength].min;
 
-    GameMap::CARDINALS.shuffle.each do |cardinal|
-      sibling = map.site(enemy.location, cardinal);
-      if sibling.enemy?
-        totalDamage += [sibling.strength, @site.strength].min
-      end
+    # take over a neutral site
+    if enemy.neutral?
+      totalDamage = 0
+    end
+
+    enemy.neighbors.values.select(&:enemy?).each do |sibling|
+      totalDamage += [sibling.strength, @site.strength].min
     end
 
     return totalDamage;
@@ -96,14 +93,13 @@ class PieceMover
     farthest_distance = max_distance
     direction = [:south, :east].shuffle.first
 
-    GameMap::CARDINALS.each do |current_direction|
+    GameMap::CARDINALS.shuffle.each do |current_direction|
       vector_length = 0
-      pointer = location
-      next_site = map.site(pointer, current_direction);
+      next_site = @site.neighbors[current_direction]
+
       while (next_site.owner == @site.owner && vector_length < farthest_distance) do
         vector_length += 1
-        pointer = map.find_location(pointer, current_direction);
-        next_site = map.site(pointer, current_direction);
+        next_site = next_site.neighbors[current_direction]
       end
 
       if (vector_length < farthest_distance)

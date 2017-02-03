@@ -1,5 +1,5 @@
 class Site
-  attr_accessor :owner, :strength, :production, :location
+  attr_accessor :owner, :strength, :production, :location, :neighbors
 
   def initialize(args)
     @owner = args[:owner]
@@ -7,6 +7,7 @@ class Site
     @production = args[:production]
     @location = args[:location]
     @player = args[:player]
+    @neighbors = {}
   end
 
   def is_weak?
