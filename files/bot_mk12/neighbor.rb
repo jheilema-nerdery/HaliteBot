@@ -7,7 +7,8 @@ class Neighbor
 
   def_delegators :@site, :owner, :strength, :production, :location, :neighbors,
                          :neutral?, :enemy?, :friendly?, :victim?,
-                         :moves
+                         :moves, :planned_strength,
+                         :at_max?, :proposed_strength_too_big?
 
   def initialize(site, direction, distance = 1)
     @site = site
@@ -21,7 +22,11 @@ class Neighbor
   end
 
   def near_an_enemy?
-    @neighbors.values.any?{|s| s.enemy? }
+    neighbors.values.any?{|s| s.enemy? }
+  end
+
+  def being_a_wall?
+    neutral? && strength > 0 && near_an_enemy?
   end
 
   def to_s

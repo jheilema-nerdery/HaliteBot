@@ -3,23 +3,23 @@ require 'forwardable'
 
 class PieceMover
   extend Forwardable
-  MAX_STRENGTH = 255
-  attr_accessor :site, :map
+  attr_accessor :site, :map, :allowed_directions, :still_allowed
 
   def_delegators :@site, :location
 
-  def initialize(site, map, search_distance = 2)
+  def initialize(site, map)
     @site = site
     @map = map
-    @search_distance = search_distance
+    @allowed_directions = @site.allowed_directions
+    @still_allowed = !@site.proposed_strength_too_big?(@site.strength)
   end
 
-  def calculate_move
-    if site.is_weak?
+  def calculate_move(search_distance)
+    if (site.is_weak? && still_allowed) || site.strength == 0
       return site.add_move(:still)
     end
 
-    attackable = map.fetch_nearby(location, @search_distance).select{|s| s.victim? }
+    attackable = map.fetch_nearby(location, search_distance, allowed_directions).select{|s| s.victim? }
 
     if attackable.empty?
       return site.add_move(nearest_edge)
@@ -37,10 +37,13 @@ class PieceMover
     neighbor = @site.neighbors[interestingest_direction]
 
     if neighbor.neutral?
-      if neighbor.strength == MAX_STRENGTH
+      if neighbor.at_max?
         return interestingest_direction
       end
-      if neighbor.strength >= @site.strength
+      if neighbor.strength >= @site.strength && still_allowed
+        return :still
+      end
+      if neighbor.being_a_wall?
         return :still
       end
     end
@@ -49,12 +52,13 @@ class PieceMover
   end
 
   def most_attackable
-    nearby = @site.neighbors.values.select{|s| s.victim? }
+    allowed_neighbors = allowed_directions.map{|dir| @site.neighbors[dir] }
+    nearby = allowed_neighbors.select{|s| s.victim? }
     sorted = nearby.sort_by{|site| [attack_heuristic(site), site.interesting] }
     best = sorted.last
 
     return :still if best.nil?
-    return :still if best.neutral? && @site.strength < best.strength
+    return :still if best.neutral? && @site.strength < best.strength && still_allowed
 
     best.direction
   end
@@ -99,7 +103,7 @@ class PieceMover
     farthest_distance = max_distance
     direction = [:south, :east].shuffle.first
 
-    GameMap::CARDINALS.shuffle.each do |current_direction|
+    allowed_directions.shuffle.each do |current_direction|
       vector_length = 0
       next_site = @site.neighbors[current_direction]
 

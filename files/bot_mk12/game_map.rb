@@ -56,9 +56,9 @@ class GameMap
     neighbors
   end
 
-  def fetch_nearby(location, distance)
+  def fetch_nearby(location, distance, directions = CARDINALS)
     (1...distance).map do |dist|
-      CARDINALS.map do |cardinal|
+      directions.map do |cardinal|
         (-dist..dist).map do |count|
           case cardinal
           when :north

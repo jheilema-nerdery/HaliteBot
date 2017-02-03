@@ -1,6 +1,6 @@
 class Move
 
-  attr_reader :location, :direction
+  attr_reader :location, :direction, :site
 
   def initialize(location, direction, site)
     @location = location

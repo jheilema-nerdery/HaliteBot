@@ -1,4 +1,6 @@
 class Site
+  MAX_STRENGTH = 255
+
   attr_accessor :owner, :strength, :production, :location, :neighbors, :moves
 
   def initialize(args)
@@ -19,8 +21,30 @@ class Site
     end
   end
 
+  def allowed_directions
+    directions = GameMap::CARDINALS.dup
+
+    neighbors.each do |direction, neighbor|
+      directions.delete(direction) if neighbor.proposed_strength_too_big?(strength)
+    end
+
+    directions
+  end
+
+  def proposed_strength_too_big?(str)
+    planned_strength + str > MAX_STRENGTH
+  end
+
+  def planned_strength
+    moves.map{|move| move.site.strength }.inject(&:+) || 0
+  end
+
   def is_weak?
     strength < 5 || (strength < 5*production)
+  end
+
+  def at_max?
+    strength == MAX_STRENGTH
   end
 
   def interesting

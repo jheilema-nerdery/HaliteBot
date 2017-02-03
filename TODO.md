@@ -1,9 +1,10 @@
 [x] create a 'crashy' bot that can collect some 255 squares and then crash
 [x] make sure my bot can account for crashy bots
 [ ] check for the swap-places bug :/
-[ ] don't waste strength on bad merges
-[ ] sort peices by strength/prod ratios, then move only a % of them?
-[ ] if there is a neutral piece between me & an enemy, wait.
+[x] don't waste strength on bad merges
+[x] sort peices by strength/prod ratios, then move only a % of them?
+[ ] take production values into account when calculating moves
+[x] if there is a neutral piece between me & an enemy, wait.
 [ ] early vs mid-game should be keyed off of making contact w/ an enemy.
 [ ] early game: distance should be a stronger indicator
 [ ] very early game: own spaces shouldn't affect interestingness (encourage merging)

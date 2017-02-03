@@ -2,12 +2,12 @@ require 'piece_mover'
 
 class Decisionmaker
   attr_accessor :map, :network, :player
-  EARLY = 70
+  EARLY = 80
   LATE = 20
 
   SEARCH_DISTANCES = {
-    early: 4,
-    mid:   5,
+    early: 5,
+    mid:   6,
     late:  5
   }
 
@@ -28,9 +28,9 @@ class Decisionmaker
   end
 
   def make_decisions
-    my_peices.each do |site|
-      mover = PieceMover.new(site, map, search_distance)
-      mover.calculate_move
+    my_peices.sort_by{|s| -s.strength }.each do |site|
+      mover = PieceMover.new(site, map)
+      mover.calculate_move(search_distance)
     end
   end
 
