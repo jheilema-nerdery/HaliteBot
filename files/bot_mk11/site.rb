@@ -1,5 +1,5 @@
 class Site
-  attr_accessor :owner, :strength, :production, :location, :neighbors
+  attr_accessor :owner, :strength, :production, :location, :neighbors, :moves
 
   def initialize(args)
     @owner = args[:owner]
@@ -8,6 +8,15 @@ class Site
     @location = args[:location]
     @player = args[:player]
     @neighbors = {}
+    @moves = []
+  end
+
+  def add_move(direction)
+    if direction == :still
+      @moves << Move.new(location, :still)
+    else
+      neighbors[direction].moves << Move.new(location, direction)
+    end
   end
 
   def is_weak?

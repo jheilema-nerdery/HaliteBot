@@ -26,14 +26,20 @@ class GameMap
       @content["#{y}_#{x}"] = site
     end
 
-    @content.values.each{|s| s.neighbors = neighbors(s.location) }
+    sites.each{|s| s.neighbors = neighbors(s.location) }
+  end
+
+  def sites
+    @content.values
   end
 
   def update(owner_data, strength_data)
     owner_data.each_with_index do |owner, index|
       y, x = index.divmod(@width)
-      @content["#{y}_#{x}"].owner = owner
-      @content["#{y}_#{x}"].strength = strength_data[index]
+      site = @content["#{y}_#{x}"]
+      site.owner    = owner
+      site.strength = strength_data[index]
+      site.moves    = []
     end
   end
 

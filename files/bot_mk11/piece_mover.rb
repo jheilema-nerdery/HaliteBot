@@ -16,16 +16,16 @@ class PieceMover
 
   def calculate_move
     if site.is_weak?
-      return Move.new(location, :still)
+      return site.add_move(:still)
     end
 
     attackable = map.fetch_nearby(location, @search_distance).select{|s| s.victim? }
 
     if attackable.empty?
-      return Move.new(location, nearest_edge)
+      return site.add_move(nearest_edge)
     end
 
-    Move.new(location, most_interesting(attackable))
+    site.add_move(most_interesting(attackable))
   end
 
   def most_interesting(attackable)

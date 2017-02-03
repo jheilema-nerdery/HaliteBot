@@ -1,7 +1,7 @@
 require 'piece_mover'
 
 class Decisionmaker
-  attr_accessor :map, :moves, :network, :player
+  attr_accessor :map, :network, :player
   EARLY = 70
   LATE = 20
 
@@ -15,24 +15,28 @@ class Decisionmaker
     @network, @player, @map = network, player, map
 
     @game_stage = :early
-    @moves = []
   end
 
-  def reset_turn
-    @moves = []
+  def next_turn
+    network.frame
     @game_stage = nil
+    make_decisions
+  end
+
+  def moves
+    Networking.log(map.sites.map(&:moves).flatten)
+    map.sites.map(&:moves).flatten
   end
 
   def make_decisions
-    mine = map.content.values.select{|s| s.owner == @player }
-    mine.each do |site|
-      move(site)
+    my_peices.each do |site|
+      mover = PieceMover.new(site, map, search_distance)
+      mover.calculate_move
     end
   end
 
-  def move(site)
-    mover = PieceMover.new(site, map, search_distance)
-    @moves << mover.calculate_move
+  def my_peices
+    map.sites.select{|s| s.owner == @player }
   end
 
   def search_distance

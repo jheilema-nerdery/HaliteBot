@@ -9,10 +9,7 @@ player, map = network.configure
 decisionmaker = Decisionmaker.new(network, player, map)
 
 while true
-  network.frame
-
-  decisionmaker.reset_turn
-  decisionmaker.make_decisions
+  decisionmaker.next_turn
 
   network.send_moves(decisionmaker.moves)
 end
