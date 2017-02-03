@@ -1,3 +1,5 @@
 halite
 runGame.sh
 testGames.sh
+*.log
+*.hlt
