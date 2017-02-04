@@ -72,7 +72,7 @@ class PieceMover
     # Sum the values of all the sites interestingness. Again, group by direction.
     sums = {}
     group_by_dir.map do |direction, sites|
-      sums[direction] = sites.map(&:interesting).reduce(:+)
+      sums[direction] = sites.map(&:interesting_per_distance).reduce(:+)
     end
 
     # convert to an array of arrays, select the maximum by the second value
