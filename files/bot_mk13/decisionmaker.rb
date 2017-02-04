@@ -32,8 +32,8 @@ class Decisionmaker
 
   def make_decisions
     my_peices.sort_by{|s| -s.strength }.each do |site|
-      mover = PieceMover.new(site, map)
-      mover.calculate_move(search_distance)
+      mover = PieceMover.new(site, map, game_stage, search_distance)
+      mover.calculate_move
     end
   end
 

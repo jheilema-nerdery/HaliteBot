@@ -3,19 +3,21 @@ require 'forwardable'
 
 class PieceMover
   extend Forwardable
-  attr_accessor :site, :map, :allowed_directions, :still_allowed
+  attr_accessor :site, :map, :allowed_directions, :still_allowed, :search_distance
 
   def_delegators :@site, :location
 
-  def initialize(site, map)
+  def initialize(site, map, game_stage, search_distance)
     @site = site
     @map = map
     @allowed_directions = @site.allowed_directions
     @still_allowed = !@site.proposed_strength_too_big?(@site.strength)
+    @game_stage = game_stage
+    @search_distance = search_distance
   end
 
-  def calculate_move(search_distance)
-    if (site.is_weak? && still_allowed) || site.strength == 0
+  def calculate_move
+    if site.strength == 0 || (site.is_weak? && still_allowed)
       return site.add_move(:still)
     end
 
