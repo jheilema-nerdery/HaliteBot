@@ -4,12 +4,20 @@ class Move
 
   def initialize(location, direction, site)
     @location = location
-    @direction = GameMap::DIRECTIONS.index(direction)
+    @direction = direction
     @site = site
   end
 
+  def strength
+    if direction == :still
+      site.strength + site.production
+    else
+      site.strength
+    end
+  end
+
   def to_s
-    [location.x, location.y, direction].join(' ')
+    [location.x, location.y, GameMap::DIRECTIONS.index(direction)].join(' ')
   end
 
 end
