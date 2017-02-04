@@ -107,7 +107,7 @@ class PieceMover
     farthest_distance = max_distance
     # select from allowed directions & south-east to prevent totally random
     # or circular movement
-    directions = allowed_directions & [:south, :east]
+    directions = allowed_directions & [:west, :south, :east]
     # default starting direction
     direction = directions.shuffle.first
 

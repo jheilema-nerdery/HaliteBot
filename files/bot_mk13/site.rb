@@ -67,7 +67,7 @@ class Site
   end
 
   def enemy?
-    !friendly? && !neutral?
+    owner != @player && owner != 0
   end
 
   def friendly?
