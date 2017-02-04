@@ -1,13 +1,8 @@
-[x] create a 'crashy' bot that can collect some 255 squares and then crash
-[x] make sure my bot can account for crashy bots
 [ ] check for the swap-places bug :/
-[x] don't waste strength on bad merges
-[x] sort peices by strength/prod ratios, then move only a % of them?
 [ ] take production values into account when calculating moves
     - order by production first
     - get the average production of all owned spaces
     - if peice has higher than average production, prefer waiting, allow other peices to merge (?)
-[x] if there is a neutral piece between me & an enemy, wait.
 [ ] make the wall two blocks thick normally.
 [ ] reduce the interestingness of wall blocks and enemy blocks behind walls
 [ ] breech walls if enemy strength + production ratio is less than mine
@@ -19,6 +14,11 @@
 [ ] early game: distance should be a stronger indicator
 [ ] very early game: own spaces shouldn't affect interestingness (encourage merging)
 [ ] very early game: enemy spaces should be a little more expensive
+[x] create a 'crashy' bot that can collect some 255 squares and then crash
+[x] make sure my bot can account for crashy bots
+[x] don't waste strength on bad merges
+[x] sort peices by strength/prod ratios, then move only a % of them?
+[x] if there is a neutral piece between me & an enemy, wait.
 
 [x] revisit overkill and attack strategies
 [ ] identify valuable sites and then pathfind to them?
