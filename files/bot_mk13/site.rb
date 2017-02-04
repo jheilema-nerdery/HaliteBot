@@ -62,6 +62,10 @@ class Site
     (production**2).to_f/strength
   end
 
+  def can_stay_still?
+    !proposed_strength_too_big?(strength + production)
+  end
+
   def in_a_warzone?
     @neighbors.values.any?{|s| s.strength == 0 && s.neutral? }
   end
