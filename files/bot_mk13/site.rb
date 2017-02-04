@@ -36,11 +36,15 @@ class Site
   end
 
   def proposed_strength_too_big?(str)
-    planned_strength + str > MAX_STRENGTH
+    (planned_strength + str) > MAX_STRENGTH
   end
 
   def planned_strength
-    moves.map{|move| move.site.strength }.inject(&:+) || 0
+    moves.map(&:strength).inject(&:+) || 0
+  end
+
+  def will_stay?
+    moves.any?{|m| m.direction == :stay }
   end
 
   def is_weak?
