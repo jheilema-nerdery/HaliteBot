@@ -13,6 +13,10 @@ class Site
     @moves = []
   end
 
+  def to_s
+    "Site #{location} str#{strength} prod#{production} owner#{owner}"
+  end
+
   def add_move(direction)
     if direction == :still
       @moves << Move.new(location, :still, self)
