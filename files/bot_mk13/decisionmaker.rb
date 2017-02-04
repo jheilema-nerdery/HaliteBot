@@ -13,13 +13,17 @@ class Decisionmaker
 
   def initialize(network, player, map)
     @network, @player, @map = network, player, map
+    network.log("All sites: #{map.sites.length}", :debug)
 
-    @game_stage = :early
+    @game_stage = nil
+    @frame = 0
   end
 
   def next_turn
     network.frame
     @game_stage = nil
+    @frame += 1
+    network.log("Game Frame #{@frame}, stage: #{game_stage}", :debug)
     make_decisions
   end
 
@@ -44,8 +48,11 @@ class Decisionmaker
 
   def game_stage
     @game_stage ||= begin
-      num_neutral = map.content.values.select{|v| v.neutral? }
-      percent     = (num_neutral.length.to_f/map.content.length) * 100
+      neutral = map.sites.select{|v| v.neutral? }
+      percent = (neutral.length.to_f/map.sites.length) * 100
+
+      network.log("Neutral sites: #{neutral.length}, #{percent}%", :debug)
+      network.log("Uncontested Neutral: #{neutral.select{|v| v.strength > 0 }.length}, #{(neutral.select{|v| v.strength > 0 }.length.to_f/map.sites.length) * 100}%", :debug)
       if percent > EARLY
         :early
       elsif percent < LATE
