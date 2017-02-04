@@ -3,19 +3,23 @@ require 'forwardable'
 
 class PieceMover
   extend Forwardable
-  attr_accessor :site, :map, :allowed_directions, :still_allowed
+  attr_accessor :site, :map, :allowed_directions, :stillness_allowed, :search_distance
 
   def_delegators :@site, :location
 
-  def initialize(site, map)
+  def initialize(site, map, game_stage, search_distance)
     @site = site
     @map = map
     @allowed_directions = @site.allowed_directions
-    @still_allowed = !@site.proposed_strength_too_big?(@site.strength)
+    @stillness_allowed = @site.can_stay_still?
+    @game_stage = game_stage
+    @search_distance = search_distance
   end
 
-  def calculate_move(search_distance)
-    if (site.is_weak? && still_allowed) || site.strength == 0
+  def calculate_move
+    if site.strength == 0 ||
+      (site.is_weak? && stillness_allowed) ||
+      allowed_directions.length == 0
       return site.add_move(:still)
     end
 
@@ -40,7 +44,7 @@ class PieceMover
       if neighbor.at_max?
         return interestingest_direction
       end
-      if neighbor.strength >= @site.strength && still_allowed
+      if neighbor.strength >= @site.strength && stillness_allowed
         return :still
       end
       if neighbor.being_a_wall?
@@ -58,7 +62,7 @@ class PieceMover
     best = sorted.last
 
     return :still if best.nil?
-    return :still if best.neutral? && @site.strength < best.strength && still_allowed
+    return :still if best.neutral? && @site.strength < best.strength && stillness_allowed
 
     best.direction
   end
@@ -70,7 +74,7 @@ class PieceMover
     # Sum the values of all the sites interestingness. Again, group by direction.
     sums = {}
     group_by_dir.map do |direction, sites|
-      sums[direction] = sites.map(&:interesting).reduce(:+)
+      sums[direction] = sites.map(&:interesting_per_distance).reduce(:+)
     end
 
     # convert to an array of arrays, select the maximum by the second value
@@ -101,13 +105,17 @@ class PieceMover
 
   def nearest_edge
     farthest_distance = max_distance
-    direction = [:south, :east].shuffle.first
+    # select from allowed directions & south-east to prevent totally random
+    # or circular movement
+    directions = allowed_directions & [:south, :east]
+    # default starting direction
+    direction = directions.shuffle.first
 
     allowed_directions.shuffle.each do |current_direction|
       vector_length = 0
       next_site = @site.neighbors[current_direction]
 
-      while (next_site.owner == @site.owner && vector_length < farthest_distance) do
+      while (next_site.friendly? && vector_length < farthest_distance) do
         vector_length += 1
         next_site = next_site.neighbors[current_direction]
       end
@@ -118,11 +126,11 @@ class PieceMover
       end
     end
 
-    direction
+    direction || :still
   end
 
   def max_distance
-    ([map.width, map.height].max / 1.5).ceil;
+    ([map.width, map.height].min / 1.5).ceil;
   end
 
 end
