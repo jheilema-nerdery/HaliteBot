@@ -3,7 +3,7 @@ require 'piece_mover'
 class Decisionmaker
   attr_accessor :map, :network, :player
   EARLY = 80
-  LATE = 20
+  LATE = 25
 
   SEARCH_DISTANCES = {
     early: 5,
