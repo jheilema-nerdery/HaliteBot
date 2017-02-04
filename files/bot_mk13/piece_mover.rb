@@ -3,7 +3,7 @@ require 'forwardable'
 
 class PieceMover
   extend Forwardable
-  attr_accessor :site, :map, :allowed_directions, :still_allowed, :search_distance
+  attr_accessor :site, :map, :allowed_directions, :stillness_allowed, :search_distance
 
   def_delegators :@site, :location
 
@@ -11,13 +11,13 @@ class PieceMover
     @site = site
     @map = map
     @allowed_directions = @site.allowed_directions
-    @still_allowed = !@site.proposed_strength_too_big?(@site.strength)
+    @stillness_allowed = !@site.proposed_strength_too_big?(@site.strength)
     @game_stage = game_stage
     @search_distance = search_distance
   end
 
   def calculate_move
-    if site.strength == 0 || (site.is_weak? && still_allowed)
+    if site.strength == 0 || (site.is_weak? && stillness_allowed)
       return site.add_move(:still)
     end
 
@@ -42,7 +42,7 @@ class PieceMover
       if neighbor.at_max?
         return interestingest_direction
       end
-      if neighbor.strength >= @site.strength && still_allowed
+      if neighbor.strength >= @site.strength && stillness_allowed
         return :still
       end
       if neighbor.being_a_wall?
@@ -60,7 +60,7 @@ class PieceMover
     best = sorted.last
 
     return :still if best.nil?
-    return :still if best.neutral? && @site.strength < best.strength && still_allowed
+    return :still if best.neutral? && @site.strength < best.strength && stillness_allowed
 
     best.direction
   end
