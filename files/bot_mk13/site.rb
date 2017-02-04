@@ -40,7 +40,7 @@ class Site
   end
 
   def planned_strength
-    moves.map{|move| move.site.strength }.inject(&:+) || 0
+    moves.map(&:strength).inject(&:+) || 0
   end
 
   def is_weak?
