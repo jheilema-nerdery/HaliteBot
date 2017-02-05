@@ -3,14 +3,13 @@ require 'forwardable'
 
 class PieceMover
   extend Forwardable
-  attr_accessor :site, :map, :allowed_directions, :search_distance
+  attr_accessor :site, :map, :search_distance
 
   def_delegators :@site, :location
 
   def initialize(site, map, game_stage, search_distance)
     @site = site
     @map = map
-    @allowed_directions = @site.allowed_directions
     @game_stage = game_stage
     @search_distance = search_distance
   end
@@ -18,9 +17,15 @@ class PieceMover
   def stillness_allowed
     if defined?(@stillness_allowed)
       return @stillness_allowed
-      end
+    end
 
     @stillness_allowed = !@site.overflowing?
+  end
+
+  def allowed_directions
+    @allowed_directions ||= GameMap::CARDINALS.select do |dir|
+      !@site.neighbors[dir].proposed_strength_too_big?(@site.strength)
+    end
   end
 
   def calculate_move

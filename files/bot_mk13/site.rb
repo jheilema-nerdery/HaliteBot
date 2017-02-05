@@ -25,16 +25,6 @@ class Site
     end
   end
 
-  def allowed_directions
-    directions = GameMap::CARDINALS.dup
-
-    neighbors.each do |direction, neighbor|
-      directions.delete(direction) if neighbor.proposed_strength_too_big?(strength)
-    end
-
-    directions
-  end
-
   def proposed_strength_too_big?(str)
     planned_strength + str > MAX_STRENGTH
   end
