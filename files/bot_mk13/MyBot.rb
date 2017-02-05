@@ -2,7 +2,7 @@ $:.unshift(File.dirname(__FILE__))
 require 'networking'
 require 'decisionmaker'
 
-NAME = "RubyBotMk13_#{Time.now.strftime('%H%M%S')}"
+NAME = "RubyBotMk13_#{Time.now.strftime('%H%M')}"
 
 network = Networking.new
 player, map = network.configure
