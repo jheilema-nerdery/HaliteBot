@@ -19,7 +19,7 @@ class Neighbor
 
   def interesting_per_distance
     score = @site.interesting
-    score/distance
+    score/(distance*2 - 1)
   end
 
   def near_an_enemy?
@@ -28,6 +28,10 @@ class Neighbor
 
   def being_a_wall?
     neutral? && strength > 0 && near_an_enemy?
+  end
+
+  def battlefront?
+    neutral? && strength == 0
   end
 
   def to_s

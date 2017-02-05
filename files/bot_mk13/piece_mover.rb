@@ -19,6 +19,10 @@ class PieceMover
       return site.add_move(:still)
     end
 
+    if @site.in_a_warzone?
+      return site.add_move most_attackable
+    end
+
     attackable = map.fetch_nearby(location, search_distance, allowed_directions).select{|s| s.victim? }
 
     if attackable.empty?
@@ -29,41 +33,6 @@ class PieceMover
   end
 
   def most_interesting(attackable)
-    if @site.in_a_warzone?
-      return most_attackable
-    end
-
-    interestingest_direction = interesting(attackable)
-    neighbor = @site.neighbors[interestingest_direction]
-
-    if neighbor.neutral?
-      if neighbor.at_max?
-        return interestingest_direction
-      end
-      if neighbor.strength >= @site.strength && stillness_allowed
-        return :still
-      end
-      if neighbor.being_a_wall?
-        return :still
-      end
-    end
-
-    return interestingest_direction
-  end
-
-  def most_attackable
-    allowed_neighbors = allowed_directions.map{|dir| @site.neighbors[dir] }
-    nearby = allowed_neighbors.select{|s| s.victim? }
-    sorted = nearby.sort_by{|site| [attack_heuristic(site), site.interesting] }
-    best = sorted.last
-
-    return :still if best.nil?
-    return :still if best.neutral? && @site.strength < best.strength && stillness_allowed
-
-    best.direction
-  end
-
-  def interesting(attackable)
     # Get a hash of attackable objects grouped by the direction they're in
     group_by_dir = attackable.group_by(&:direction)
 
@@ -73,26 +42,69 @@ class PieceMover
       sums[direction] = sites.map(&:interesting_per_distance).reduce(:+)
     end
 
-    # convert to an array of arrays, select the maximum by the second value
-    # in the array, then return the first value (the direction!)
-    sums.max_by(&:last).first
+    # convert to an array of arrays, sort by the second value
+    # in the array, then return the first values (the direction!)
+    # Reversed so the first is the most interesting direction, last is the least
+    sorted_directions = sums.sort_by(&:last).map(&:first).reverse
+
+    return handle_special_cases(sorted_directions)
   end
 
-  def attack_heuristic(neighbor)
+  def handle_special_cases(sorted_directions)
+    # get the first element off the array - changes the array!
+    interestingest_direction = sorted_directions.shift
+    neighbor = @site.neighbors[interestingest_direction]
+
+    # no more interesting directions found
+    if interestingest_direction.nil?
+      return :still
+    end
+
+    if neighbor.neutral?
+      # attack things that otherwise don't get attacked
+      if neighbor.at_max?
+        return interestingest_direction
+      end
+      if neighbor.strength >= @site.strength && stillness_allowed
+        return :still
+      end
+      # go in a different direction
+      if neighbor.being_a_wall?
+        return :still if stillness_allowed
+        return handle_special_cases(sorted_directions)
+      end
+    end
+
+    return interestingest_direction
+  end
+
+  def most_attackable
+    sorted = allowed_directions.map{|dir| @site.neighbors[dir] }#.select{|s| s.victim? }
+      .sort_by{|site| [-attack_heuristic(site), -site.interesting] }
+    best = sorted.first
+
+    return :still if best.nil?
+    return :still if best.neutral? && @site.strength < best.strength && stillness_allowed
+
+    best.direction
+  end
+
+  def attack_heuristic(target)
     damage = 0
 
     # prefer attacking then wasting energy on neutral blocks.
-    # if the neutral block is on the battlefront, it'll be zero and
-    # this won't matter.
-    if neighbor.neutral?
-      damage -= neighbor.strength/2
+    # if the neutral block is contested, this will be zero and won't matter.
+    if target.neutral?
+      damage -= target.strength/2
     end
 
-    if neighbor.enemy?
-      damage += [neighbor.strength, @site.strength].min
+    # assume far away enemies will come forward
+    buffer = target.neighbors[target.direction]
+    if buffer.neutral? && buffer.neighbors[target.direction].enemy?
+      damage += [buffer.neighbors[target.direction].strength, @site.strength].min
     end
 
-    neighbor.neighbors.values.select(&:enemy?).each do |sibling|
+    target.neighbors.values.select(&:enemy?).each do |sibling|
       damage += [sibling.strength, @site.strength].min
     end
 

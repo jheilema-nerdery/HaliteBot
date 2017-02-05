@@ -21,6 +21,7 @@ class Site
     if direction == :still
       @moves << Move.new(location, :still, self)
     else
+      Networking.log("Moving! #{location} #{direction}")
       neighbors[direction].moves << Move.new(location, direction, self)
     end
   end
@@ -46,6 +47,9 @@ class Site
   end
 
   def interesting
+    if friendly?
+      return 0
+    end
     if strength == 0
       return production**2
     end

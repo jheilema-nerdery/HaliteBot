@@ -6,9 +6,9 @@ class Decisionmaker
   LATE = 20
 
   SEARCH_DISTANCES = {
-    early: 5,
-    mid:   6,
-    late:  5
+    early: 6,
+    mid:   4,
+    late:  3
   }
 
   def initialize(network, player, map)
