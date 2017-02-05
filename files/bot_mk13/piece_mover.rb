@@ -14,20 +14,6 @@ class PieceMover
     @search_distance = search_distance
   end
 
-  def stillness_allowed
-    if defined?(@stillness_allowed)
-      return @stillness_allowed
-    end
-
-    @stillness_allowed = !@site.overflowing?
-  end
-
-  def allowed_directions
-    @allowed_directions ||= GameMap::CARDINALS.select do |dir|
-      !@site.neighbors[dir].proposed_strength_too_big?(@site.strength)
-    end
-  end
-
   def calculate_move
     if site.strength == 0 || (site.is_weak? && stillness_allowed)
       return site.add_move(:still)
@@ -137,6 +123,20 @@ class PieceMover
 
   def max_distance
     ([map.width, map.height].max / 1.5).ceil;
+  end
+
+  def stillness_allowed
+    if defined?(@stillness_allowed)
+      return @stillness_allowed
+    end
+
+    @stillness_allowed = !@site.overflowing?
+  end
+
+  def allowed_directions
+    @allowed_directions ||= GameMap::CARDINALS.select do |dir|
+      !@site.neighbors[dir].proposed_strength_too_big?(@site.strength)
+    end
   end
 
 end
