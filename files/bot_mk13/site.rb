@@ -43,6 +43,10 @@ class Site
     moves.map(&:strength).inject(&:+) || 0
   end
 
+  def overflowing?
+    proposed_strength_too_big?(strength + production)
+  end
+
   def is_weak?
     strength < 5 || (strength < 5*production)
   end
