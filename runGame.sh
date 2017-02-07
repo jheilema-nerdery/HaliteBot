@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ./halite -q -d '30 30' \
+            "ruby files/bot_mk14_test/MyBot.rb" \
             "ruby files/bot_mk13/MyBot.rb" \
-            "ruby files/bot_mk11/MyBot.rb" \
             "ruby files/bot_mk12/MyBot.rb"
 
 # ./halite -q -d '30 30'\

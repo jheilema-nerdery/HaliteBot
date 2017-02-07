@@ -13,10 +13,13 @@ test2_second=0
 test3_wins=0
 test3_second=0
 
-for i in {1..20}
-  do
+count=${1:-50}
+
+
+for (( i=1; i<=$count; i++ ))
+do
     echo -ne "${i}       \r"
-    result=$(./halite -q -d '30 30' "ruby files/bot_mk13/MyBot.rb" "ruby files/bot_mk11/MyBot.rb" "ruby files/bot_mk12/MyBot.rb")
+    result=$(./halite -q -d '30 30' "ruby files/bot_mk14/MyBot.rb" "ruby files/bot_mk13/MyBot.rb" "ruby files/bot_mk12/MyBot.rb")
 
     declare -a MYRA
     MYRA=($result)
@@ -29,7 +32,7 @@ for i in {1..20}
     test ${MYRA[17]} = "2" && ((pl3_second++))
 
     echo -ne "${i} test \r"
-    result=$(./halite -q -s ${MYRA[9]} -d '30 30' "ruby files/bot_mk13_test/MyBot.rb" "ruby files/bot_mk11/MyBot.rb" "ruby files/bot_mk12/MyBot.rb")
+    result=$(./halite -q -s ${MYRA[9]} -d '30 30' "ruby files/bot_mk14_test/MyBot.rb" "ruby files/bot_mk13/MyBot.rb" "ruby files/bot_mk12/MyBot.rb")
 
     declare -a TEST
     TEST=($result)
@@ -40,7 +43,7 @@ for i in {1..20}
     test ${TEST[14]} = "2" && ((test2_second++))
     test ${TEST[17]} = "1" && ((test3_wins++))
     test ${TEST[17]} = "2" && ((test3_second++))
-  done
+done
 
 echo
 echo "Base"
