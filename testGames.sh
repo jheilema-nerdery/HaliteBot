@@ -12,8 +12,8 @@ pl3_second=0
 pl4_wins=0
 pl4_second=0
 
-for i in {1..100}
-  do
+for i in {1..50}
+do
     echo -ne "${i} \r"
     result=$(./runGame.sh)
 
@@ -48,7 +48,7 @@ for i in {1..100}
 
     # test ${MYRA[22]} = "1" && ((pl4_wins++))
     # test ${MYRA[22]} = "2" && ((pl4_second++))
-  done
+done
 
 echo
 echo "Win	2nd	Name"

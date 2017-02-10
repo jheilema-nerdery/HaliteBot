@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./halite -q -d '30 30' \
+./halite -q  -d '30 30'\
             "ruby files/bot_mk14_test/MyBot.rb" \
             "ruby files/bot_mk13/MyBot.rb" \
             "ruby files/bot_mk12/MyBot.rb"
