@@ -56,6 +56,10 @@ class Site
     (production**2).to_f/strength
   end
 
+  def walls
+    @neighbors.values.select(&:being_a_wall?)
+  end
+
   def in_a_warzone?
     @neighbors.values.any?{|s| s.strength == 0 && s.neutral? }
   end

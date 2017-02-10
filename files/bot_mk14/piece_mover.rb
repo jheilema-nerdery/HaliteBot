@@ -23,13 +23,17 @@ class PieceMover
       return site.add_move most_attackable
     end
 
-    attackable = map.fetch_nearby(location, search_distance, allowed_directions).select{|s| s.victim? }
+    if @site.neighbors.values.any?(&:being_a_wall?)
+      return @site.add_move(:still)
+    end
 
-    if attackable.empty?
+    nearby = map.fetch_nearby(location, search_distance, allowed_directions)
+
+    if nearby.none?(&:victim?)
       return site.add_move(nearest_edge)
     end
 
-    site.add_move(most_interesting(attackable))
+    site.add_move(most_interesting(nearby))
   end
 
   def most_interesting(attackable)
@@ -114,8 +118,9 @@ class PieceMover
   def nearest_edge
     farthest_distance = max_distance
     direction = [:south, :east].shuffle.first
+    sorted = allowed_directions.sort_by{|dir| @site.neighbors[dir].production }
 
-    allowed_directions.shuffle.each do |current_direction|
+    sorted.each do |current_direction|
       vector_length = 0
       next_site = @site.neighbors[current_direction]
 

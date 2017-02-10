@@ -23,21 +23,22 @@ class Decisionmaker
     @game_stage = nil
     @frame += 1
     network.log("Game Frame #{@frame}, stage: #{game_stage}", :debug)
-    make_decisions
+    make_decisions(my_pieces)
   end
 
   def moves
     map.sites.map(&:moves).flatten
   end
 
-  def make_decisions
-    my_peices.sort_by{|s| -s.strength }.each do |site|
+  def make_decisions(pieces)
+    sorted = pieces.sort_by{|s| [-s.walls.length, -s.strength, -s.production] }
+    sorted.each do |site|
       mover = PieceMover.new(site, map, game_stage, search_distance)
       mover.calculate_move
     end
   end
 
-  def my_peices
+  def my_pieces
     map.sites.select{|s| s.owner == @player }
   end
 
