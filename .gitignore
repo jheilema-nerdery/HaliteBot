@@ -1,3 +1,4 @@
 halite
 *.log
 *.hlt
+__pycache__
