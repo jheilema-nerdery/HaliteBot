@@ -12,7 +12,7 @@ import argparse
 import json
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--name',type=str, nargs='?', default='bot_erdman',help='Name of this version of the bot.')  #defaults below correspond to "eleanor"
+parser.add_argument('--name',type=str, nargs='?', default='bot_erdman_'+ time.strftime('%H%M'),help='Name of this version of the bot.')  #defaults below correspond to "eleanor"
 parser.add_argument('--alpha', type=float, nargs='?', default=0.10, help='Alpha to use in exponential smoothing / discounting of ROI over distance.  Default is 0.10')  #Default was 0.25
 parser.add_argument('--potential_degradation_step', type=float, nargs='?', default=0.2, help='Times friendly_distance ** 2 is potential degradation.  Default is 0.2')  #Default was 0.5
 parser.add_argument('--enemy_ROI', type=float, nargs='?', default=-0.5, help='Amount of ROI to include for each enemy adjacent to an empty square.  Default is -0.5')   #Default was -1.0
@@ -44,6 +44,7 @@ def assign_move(square):
     stay_loss = max(0, min(255, square.strength + square.production) + destinations[square] - 255)
 
     if not stay_loss and (destinations[square] > 0 or square in redlight):     #safely meld with all oncoming
+        logging.debug(str(turn) + ' :: REDlight / allow merging:  ' + str(square) + ' went STILL')
         return Move(square, STILL)
 
     dangerous_empties = {neighbor : min(255, sum(n2.strength for n2 in game_map.neighbors(neighbor, include_self=True) if n2.owner not in (0, myID)))
@@ -57,6 +58,7 @@ def assign_move(square):
         and not dangerous_empties \
         and sum(1 for neighbor in game_map.neighbors(square) if neighbor.owner == neighbor.strength == 0) > 1 \
         and len(set(n2 for neighbor in game_map.neighbors(square) if neighbor.owner == neighbor.strength == 0 for n2 in game_map.neighbors(neighbor) if n2.owner not in (0,myID) and n2.strength >= 3 * n2.production)) > 1:
+            logging.debug(str(turn) + ' :: strategic stilling  ' + str(square) + ' went still')
             return Move(square, STILL)   #strategic stilling ftw
 
     if any(neighbor in dangerous_empties for neighbor in game_map.neighbors(target, include_self=True)) \
@@ -67,24 +69,30 @@ def assign_move(square):
                                 + (1e7 if neighbor in wall else 0) \
                                 + (100000 if neighbor.owner == 0 and square.strength <= neighbor.strength else 0), random.random(), direction, neighbor)
                                 for direction, neighbor in enumerate(game_map.neighbors(square, include_self=True))) # the random number breaks ties randomly
+        logging.debug(str(turn) + ' :: dangerous enemies  ' + str(square) + ' went ' +  str(best_d))
         return Move(square, best_d)
 
     if stay_loss or potential > 9000:  #ok, now figure out which is worse
         if min(255, square.strength + square.production + destinations[square]) + min(255, destinations[target]) > min(255, destinations[square]) + min(255, destinations[target] + square.strength):
             # agreeing to losing squares by staying, bc better off than moving
+            logging.debug(str(turn) + ' :: stay still despite cap loss, better than moving. ' + str(square))
             return Move(square, STILL)
         else:
+            logging.debug(str(turn) + ' :: move ' + str(best_d) + ' despite cap loss, better than still. ' + str(square))
             return Move(square, best_d)
 
     if target.owner != myID:  #an opponent -- actually can never be adjacent to opponent, it's always me or a "zero" owner square
         if ((square.strength == 255) or (square.strength + destinations[target] > target.strength)) \
             and square.strength >= 2 * square.production \
             and (destinations[target] == 0 or square.strength >= args.hold_until * square.production):
+            logging.debug(str(turn) + ' :: move ' + str(best_d) + ' capture neutral. ' + str(square))
             return Move(square, best_d)
 
     elif square.strength >= max(strength_hurdle, args.hold_until * square.production):   #target square is friendly, and we are strong enough to move
+        logging.debug(str(turn) + ' :: move ' + str(best_d) + ' through safe territory.' + str(square))
         return Move(square, best_d)
 
+    logging.debug(str(turn) + ' :: nothing matched.  ' + str(square) + ' stayed still')
     return Move(square, STILL)
 
 def initial_potential(square):
