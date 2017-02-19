@@ -26,7 +26,10 @@ class PieceMover
     if @site.neighbors.values.any?(&:being_a_wall?)
       return @site.add_move(:still)
     end
+    expand
+  end
 
+  def expand
     nearby = map.fetch_nearby(location, search_distance, allowed_directions)
 
     if nearby.none?(&:victim?)
@@ -34,6 +37,49 @@ class PieceMover
     end
 
     site.add_move(most_interesting(nearby))
+  end
+
+  def move_towards(location, expanding = false)
+    directions = map.angle_between(site.location, location)
+    Networking.log("Move #{site} towards #{location}, directions: #{directions}")
+    possible = allowed_directions & directions
+
+    if possible.empty?
+      if stillness_allowed || allowed_directions.length == 0
+        site.add_move(:still)
+      else
+        site.add_move(allowed_directions.shuffle.first)
+      end
+      return 0
+    end
+
+    neighbors = site.neighbors.values.select{|n| possible.include?(n.direction) }
+
+    battlefront = neighbors.select(&:battlefront?)
+    if !battlefront.empty?
+      site.add_move(battlefront.first.direction)
+      return site.strength
+    end
+
+    friendly = neighbors.select(&:friendly?)
+    if !friendly.empty?
+      site.add_move(friendly.first.direction)
+      return site.strength
+    end
+
+    neutral = neighbors.select{|n| n.neutral? && n.strength < site.strength }
+    if expanding && !neutral.empty?
+      site.add_move(neutral.shuffle.first.direction)
+      return 0
+    end
+
+    if stillness_allowed || allowed_directions.length == 0
+      site.add_move(:still)
+      return 0
+    end
+
+    site.add_move(allowed_directions.shuffle.first)
+    return 0
   end
 
   def most_interesting(attackable)
@@ -83,7 +129,7 @@ class PieceMover
   end
 
   def most_attackable
-    sorted = allowed_directions.map{|dir| @site.neighbors[dir] }#.select{|s| s.victim? }
+    sorted = allowed_directions.map{|dir| @site.neighbors[dir] }.select{|s| (s.neutral? && s.strength == 0) || s.friendly? }
       .sort_by{|site| [-attack_heuristic(site), -site.interesting] }
     best = sorted.first
 

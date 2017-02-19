@@ -42,8 +42,18 @@ class Site
     strength < 5 || (strength < 5*production)
   end
 
+  def is_strong?
+    !is_weak?
+  end
+
   def at_max?
     strength == MAX_STRENGTH
+  end
+
+  def bordering_me?
+    neighbors.values.any?{|n|
+      n.battlefront? && (n.neighbors.values.any?(&:friendly?) || (n.neighbors.values.any?{|nn| nn.battlefront? && nn.neighbors.values.any?(&:friendly?) }))
+    }
   end
 
   def interesting
@@ -54,6 +64,11 @@ class Site
       return production**2
     end
     (production**2).to_f/strength
+  end
+
+  def surrounding_sites
+    dirs = GameMap::CARDINALS
+    dirs.each_with_index.map{|dir, idx| [neighbors[dir], neighbors[dir].neighbors[dirs[idx-3]]] }.flatten
   end
 
   def walls

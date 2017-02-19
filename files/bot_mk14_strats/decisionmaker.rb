@@ -1,4 +1,5 @@
 require 'piece_mover'
+require 'strategizer'
 
 class Decisionmaker
   attr_accessor :map, :network, :player
@@ -16,6 +17,7 @@ class Decisionmaker
 
     @game_stage = :early
     @frame = 0
+    @strategizer = Strategizer.new(@map, @player)
   end
 
   def next_turn
@@ -23,23 +25,11 @@ class Decisionmaker
     @game_stage = nil
     @frame += 1
     network.log("Game Frame #{@frame}, stage: #{game_stage}", :debug)
-    make_decisions(my_pieces)
+    @strategizer.make_decisions
   end
 
   def moves
     map.sites.map(&:moves).flatten
-  end
-
-  def make_decisions(pieces)
-    sorted = pieces.sort_by{|s| [-s.walls.length, -s.strength, -s.production] }
-    sorted.each do |site|
-      mover = PieceMover.new(site, map, game_stage, search_distance)
-      mover.calculate_move
-    end
-  end
-
-  def my_pieces
-    map.sites.select{|s| s.owner == @player }
   end
 
   def search_distance
@@ -50,9 +40,6 @@ class Decisionmaker
     @game_stage ||= begin
       neutral = map.sites.select{|v| v.neutral? }
       percent = (neutral.length.to_f/map.sites.length) * 100
-
-      network.log("Neutral sites: #{neutral.length}, #{percent}%", :debug)
-      network.log("Uncontested Neutral: #{neutral.select{|v| v.strength > 0 }.length}, #{(neutral.select{|v| v.strength > 0 }.length.to_f/map.sites.length) * 100}%", :debug)
 
       if percent > EARLY
         :early

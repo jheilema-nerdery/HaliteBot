@@ -126,7 +126,32 @@ class GameMap
 
   def angle_between(from, to)
     dx, dy = deltas(from, to)
-    Math.atan2(dy, dx)
+    degrees = Math.atan2(dy, dx)*180/Math::PI
+    degrees += 360 if degrees < 0
+
+    case degrees
+    when 0, 360
+      [:east]
+    when 90
+      [:south]
+    when 180
+      [:west]
+    when 270
+      [:north]
+    else
+      if 0 < degrees && degrees < 90
+        [:east, :south]
+      elsif 90 < degrees && degrees < 180
+        [:south, :west]
+      elsif 180 < degrees && degrees < 270
+        [:west, :north]
+      elsif 270 < degrees && degrees < 360
+        [:north, :east]
+      else
+        Networking.log("imposslbe degrees: #{degrees}, #{dy} #{dx}")
+        raise 'impossssibruuuu'
+      end
+    end
   end
 
   def direction(from, to)
