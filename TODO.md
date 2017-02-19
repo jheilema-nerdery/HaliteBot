@@ -1,3 +1,6 @@
+[ ] Weight/target weakest enemy 
+
+
 [ ] check for the swap-places bug :/
 [ ] take production values into account when calculating moves
     - order by production first
