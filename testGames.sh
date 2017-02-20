@@ -12,7 +12,7 @@ pl3_second=0
 pl4_wins=0
 pl4_second=0
 
-for i in {1..200}
+for i in {1..100}
 do
     echo -ne "${i} \r"
     result=$(./runGame.sh)

@@ -43,11 +43,34 @@ class Frame
   end
 
   def interactable_enemies
-    @known_enemies
+    @interacted_enemies ||= begin
+      if @walls.length > 0 && @borders.length == 0 && @battlefronts.length == 0
+        # locked in, find the weakest neighbor
+        Networking.log("locked in, find the weakest neighbor", :debug)
+        weakest = @owners.select{|o| !@known_enemies.include? o.tag }.sort_by{|o| o.strength + o.production*3 }.first
+        if weakest.nil?
+          return @known_enemies
+        end
+
+        Networking.log("targeting: #{weakest.tag} #{weakest.strength} #{weakest.production}", :debug)
+        # discount my own; don't attack someone who's close to the same size as me
+        if @me.strength*0.9 > weakest.strength &&  @me.production*0.9 > weakest.production
+          @known_enemies.merge([weakest.tag])
+        end
+      end
+
+      Networking.log("interactable enemies: #{@known_enemies}", :debug)
+      @known_enemies
+    end
   end
 
   def multiplier
-    @multiplier ||= battlefronts.length > 0 ? Decisionmaker::COMBAT_MULTIPLIER : Decisionmaker::BASE_MULTIPLIER
+    @multiplier ||= begin
+      if @owners.length == 1
+        return Decisionmaker::COMBAT_MULTIPLIER + 2
+      end
+      battlefronts.length > 0 ? Decisionmaker::COMBAT_MULTIPLIER : Decisionmaker::BASE_MULTIPLIER
+    end
   end
 
   def my_pieces
@@ -62,7 +85,7 @@ class Frame
       strengths = my_pieces.select{|s| s.neighbors.min_by(&:discounted_score).friendly? }.map(&:strength).sort.reverse
       Networking.log(" --- : Strengths: #{strengths}", :debug)
       return 0 if strengths.empty?
-      # percent = (1 - strengths.length.to_f/map*height*map.width) * (Decisionmaker::INT_MAX - Decisionmaker::INT_MIN) + Decisionmaker::INT_MIN
+      # percent = (1 - strengths.length.to_f/(map.height*map.width)) * (Decisionmaker::INT_MAX - Decisionmaker::INT_MIN) + Decisionmaker::INT_MIN
       percent = (1 - strengths.length.to_f/(50*50)) * (Decisionmaker::INT_MAX - Decisionmaker::INT_MIN) + Decisionmaker::INT_MIN
       Networking.log(" --- : Percent: #{percent}", :debug)
       Networking.log(" --- : index: #{(strengths.length*percent).to_i}", :debug)

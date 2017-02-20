@@ -47,6 +47,11 @@ class Decisionmaker
     @interacted_enemies = @frame.interactable_enemies
     network.log("Frame #{@frame_number}: Walls & battlefronts calculated", :debug)
 
+    if @frame.stalemate?
+      network.log("Frame #{@frame_number}: Stalemate turn. Wait a sec.", :debug)
+      return
+    end
+
     flow_weights
     stop_go
     network.log("Frame #{@frame_number}: Weights flowed", :debug)

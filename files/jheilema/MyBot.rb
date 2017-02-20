@@ -2,7 +2,7 @@ $:.unshift(File.dirname(__FILE__))
 require 'networking'
 require 'decisionmaker'
 
-NAME = "Hungryv4_#{Time.now.strftime('%H%M')}"
+NAME = "jheilema"
 
 network = Networking.new
 player, map = network.configure
