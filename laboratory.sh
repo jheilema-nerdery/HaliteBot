@@ -23,7 +23,7 @@ count=${1:-50}
 for (( i=1; i<=$count; i++ ))
 do
     echo -ne "${i}       \r"
-    result=$(./halite -q -d '25 25' "ruby files/hungry/MyBot.rb" "python3 ./files/shummie/shummiev85.py" "ruby files/bot_mk13/MyBot.rb" "ruby files/bot_mk11/MyBot.rb")
+    result=$(./halite -q -d '25 25' "ruby files/hungry_v4/MyBot.rb" "python3 ./files/shummie/shummiev85.py" "ruby files/bot_mk13/MyBot.rb" "ruby files/bot_mk11/MyBot.rb")
 
     declare -a MYRA
     MYRA=($result)
@@ -38,7 +38,7 @@ do
     test ${MYRA[22]} = "2" && ((pl4_second++))
 
     echo -ne "${i} test \r"
-    result=$(./halite -q -s ${MYRA[11]} -d '25 25' "python3 ./files/erdman/erdman_v26.py" "python3 ./files/shummie/shummiev85.py" "ruby files/bot_mk13/MyBot.rb" "ruby files/bot_mk11/MyBot.rb")
+    result=$(./halite -q -s ${MYRA[11]} -d '25 25' "ruby files/hungry_v3/MyBot.rb" "python3 ./files/shummie/shummiev85.py" "ruby files/bot_mk13/MyBot.rb" "ruby files/bot_mk11/MyBot.rb")
 
     declare -a TEST
     TEST=($result)
