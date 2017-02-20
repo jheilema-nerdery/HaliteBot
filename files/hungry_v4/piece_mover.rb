@@ -19,6 +19,7 @@ class PieceMover
   def calculate_move
     score, _, target = best_target
     Networking.log("#{site.location} score #{score} direction #{target.direction}", :debug)
+
     if site.greenlight
       Networking.log("#{site.location} Greenlight", :debug)
       return site.add_move(target.direction)
@@ -46,7 +47,7 @@ class PieceMover
           neighbor.discounted_score \
         + (10_000 * [0, (neighbor.planned_strength + @site.strength - 255)].max) \
         + (neighbor.planned_strength == 0 ? neighbor.self_with_neighbors.map{|n2| dangerous_neighbors[n2] || 0 }.reduce(:+) * 5_000 : 0)
-        + (neighbor.being_a_wall?(@interacted_enemies) ? 1_000_000 : 0) \
+        + (neighbor.being_a_wall?(@interacted_enemies) ? 10_000_000 : 0) \
         + (neighbor.neutral? && site.strength <= neighbor.strength ? 100_000 : 0)
       end
       Networking.log("#{site.location} best direction neighbor, #{best_direction_neighbor.discounted_score}", :debug)

@@ -95,7 +95,7 @@ class Site
   end
 
   def dangerous?
-    enemy? || blank_neutral? && self_with_neighbors.any?(&:strong_enemy?) && self_with_neighbors.any?{|n2| n2.moves.length > 0 }
+    (enemy? || blank_neutral?) && self_with_neighbors.any?(&:strong_enemy?) && self_with_neighbors.any?{|n2| n2.planned_strength > 0 }
   end
 
   def strong_enemy?

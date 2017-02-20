@@ -1,10 +1,16 @@
+require 'frame'
 require 'piece_mover'
 require 'priority_queue'
 require 'set'
+require 'forwardable'
 
 class Decisionmaker
-  attr_accessor :map, :network, :player, :battlefronts
-  attr_reader :interacted_enemies, :walls, :borders, :strength_hurdle
+  extend Forwardable
+
+  attr_accessor :map, :network, :player
+  attr_reader :interacted_enemies
+  def_delegators :@frame, :walls, :borders, :strength_hurdle, :my_pieces,
+                          :multiplier
 
   # smoothing constant for discounting ROI over distance.
   SMOOTHING = 0.10
@@ -28,31 +34,28 @@ class Decisionmaker
   def initialize(network, player, map)
     @network, @player, @map = network, player, map
 
-    @frame = -1
+    @frame_number = -1
     @interacted_enemies = Set.new [0, @player]
-    @battlefronts = []
-    @walls = Set.new
   end
 
   def next_turn
     network.frame
-    @frame += 1
-    network.log("Game Frame: #{@frame}", :debug)
+    @frame_number += 1
+    network.log("Game Frame: #{@frame_number}", :debug)
 
-    @battlefronts = Set.new(map.sites.select(&:battlefront?))
-    @interacted_enemies.merge(battlefronts.map{|s| s.neighbors.map(&:owner) }.flatten)
-    @walls = Set.new(map.sites.select{|s| s.being_a_wall?(@interacted_enemies) })
-    @borders = map.sites.select{|s| s.neutral? && s.production > 0 && !@walls.include?(s) && s.neighbors.any?(&:friendly?) }
-    network.log("Frame #{@frame}: Walls & battlefronts calculated", :debug)
+    @frame = Frame.new(player, map, @interacted_enemies)
+    @interacted_enemies = @frame.interactable_enemies
+    network.log("Frame #{@frame_number}: Walls & battlefronts calculated", :debug)
 
     flow_weights
-    network.log("Frame #{@frame}: Weights flowed", :debug)
+    stop_go
+    network.log("Frame #{@frame_number}: Weights flowed", :debug)
 
-    @strength_hurdle = calculate_strength_hurdle
-    network.log("Frame #{@frame}: Strength hurdle  #{@strength_hurdle}", :debug)
+    @strength_hurdle = @frame.strength_hurdle
+    network.log("Frame #{@frame_number}: Strength hurdle  #{@strength_hurdle}", :debug)
 
     make_decisions(my_pieces.select{|s| s.strength > 0 })
-    network.log("Frame #{@frame}: Decisions made", :debug)
+    network.log("Frame #{@frame_number}: Decisions made", :debug)
   end
 
   def moves
@@ -70,14 +73,14 @@ class Decisionmaker
 
   def flow_weights
     boondocks = map.sites.select(&:victim?).map do |s|
-      s.score = s.initial_score * (@walls.include?(s) ? 100 : 1)
+      s.score = s.initial_score * (@frame.walls.include?(s) ? 100 : 1)
       [s.score, rand, s.score, 0, Neighbor.new(s, :still, 0)]
     end
 
     queue = PriorityQueue.new(boondocks)
 
     @considered = Set.new
-    network.log("Frame #{@frame}: Boondocks, considered, and queue initialized", :debug)
+    network.log("Frame #{@frame_number}: Boondocks, considered, and queue initialized", :debug)
 
     while @considered.length < network.size
       n, _, score, distance, next_best_site = queue.pop
@@ -94,7 +97,7 @@ class Decisionmaker
       next_best_site.neighbors.each do |neighbor|
         # skip any neighbors in walls. They shouldn't count toward weighing
         # the value of other squares since we won't path through them.
-        next if @walls.include? neighbor
+        next if @frame.walls.include? neighbor
         next if @considered.include? neighbor
         next if neighbor.score == Float::INFINITY # we'll get to it eventually
 
@@ -111,8 +114,10 @@ class Decisionmaker
         end
       end
     end
-    network.log("Frame #{@frame}: Weights flowed", :debug)
+    network.log("Frame #{@frame_number}: Weights flowed", :debug)
+  end
 
+  def stop_go
     edges = my_pieces.map do |site|
       [ site.neighbors.min_by(&:discounted_score), site ]
     end
@@ -124,38 +129,38 @@ class Decisionmaker
     parents, children = edges.map(&:first), edges.map(&:last)
     roots = Set.new(parents) - children
     trees = trees.select{|base, branches| roots.include? base }
-    network.log("Frame #{@frame}: Trees constructed", :debug)
+    network.log("Frame #{@frame_number}: Trees constructed", :debug)
 
     trees.each do |root, branches|
-      network.log("Frame #{@frame}: root - #{root}", :debug)
+      network.log("Frame #{@frame_number}: root - #{root}", :debug)
       builtup_production = 0
       builtup_strength = 0
       walk_tree(branches).each do |level, sites|
-        network.log("Frame #{@frame}: level - #{level} ---- #{sites.map(&:location)}", :debug)
+        network.log("Frame #{@frame_number}: level - #{level} ---- #{sites.map(&:location)}", :debug)
         if builtup_strength + builtup_production > root.strength
-          network.log("Frame #{@frame}: previous levels can capture! break the loop!", :debug)
+          network.log("Frame #{@frame_number}: previous levels can capture! break the loop!", :debug)
           break
         end
         level_strength = sites.map(&:strength).reduce(:+)
         level_production = sites.map(&:production).reduce(:+)
-        network.log("Frame #{@frame}: level strength: #{level_strength}   production: #{level_production}", :debug)
+        network.log("Frame #{@frame_number}: level strength: #{level_strength}   production: #{level_production}", :debug)
         if level_strength + builtup_strength + builtup_production > root.strength
           sorted = sites.sort_by(&:strength)
           while (level_strength + builtup_production + builtup_strength - sorted[0].strength) > root.strength
             level_strength -= sorted.shift.strength
           end
           sorted.map(&:greenlight!)
-          network.log("Frame #{@frame}: greenlight! #{sorted.map(&:location)}", :debug)
+          network.log("Frame #{@frame_number}: greenlight! #{sorted.map(&:location)}", :debug)
           break
         else
           builtup_strength += level_strength + builtup_production
           builtup_production += level_production
-          network.log("Frame #{@frame}: redlight!", :debug)
+          network.log("Frame #{@frame_number}: redlight!", :debug)
           sites.map(&:redlight!)
         end
       end
     end
-    network.log("Frame #{@frame}: redlight/greenlight decided", :debug)
+    network.log("Frame #{@frame_number}: redlight/greenlight decided", :debug)
   end
 
   def walk_tree(branches, level=1)
@@ -168,28 +173,6 @@ class Decisionmaker
 
   def discount_score(score, distance)
     return score + POTENTIAL_DEGREDATION * distance**2
-  end
-
-  def my_pieces
-    map.sites.select{|s| s.friendly? }
-  end
-
-  def multiplier
-    battlefronts.length > 0 ? COMBAT_MULTIPLIER : BASE_MULTIPLIER
-  end
-
-  def calculate_strength_hurdle
-    my_pieces.each do |s|
-      network.log(" - : #{s} - #{s.discounted_score} :: #{s.neighbors.min_by(&:discounted_score)} - #{s.neighbors.min_by(&:discounted_score).discounted_score}", :debug)
-    end
-    strengths = my_pieces.select{|s| s.neighbors.min_by(&:discounted_score).friendly? }.map(&:strength).sort.reverse
-    network.log("Frame #{@frame}: Strengths: #{strengths}", :debug)
-    return 0 if strengths.empty?
-    percent = (1 - strengths.length.to_f/network.size) * (INT_MAX - INT_MIN) + INT_MIN
-    percent = (1 - strengths.length.to_f/(50*50)) * (INT_MAX - INT_MIN) + INT_MIN
-    network.log("Frame #{@frame}: Percent: #{percent}", :debug)
-    network.log("Frame #{@frame}: index: #{(strengths.length*percent).to_i}", :debug)
-    strengths[(strengths.length*percent).to_i]
   end
 
 end
