@@ -1,8 +1,8 @@
 # [Halite](https://halite.io/)
 
-Whew! It's over. Or at least, it WAS over for most people about a week ago. I've delayed releasing my bot because my company is running a private server this week for our own competition. Don't want to give anybody an edge; our deadline for bot submission was the morning of Monday February 20, with final outcomes on Friday, February 24. 
+Whew! It's over. Or at least, it WAS over for most people about a week ago. I've delayed releasing my bot because my company is running a private server this week for our own competition. Our deadline for bot submission was the morning of Monday February 20, with final outcomes on Friday, February 24. 
 
-This has been a bit of a whirlwind few weeks. I found out about this because... my company is running a private competition. :) We got the email on January 30, and my life has been all downhill from there. 
+This has been a bit of a whirlwind few weeks. I found out about this because my company is running a private competition! :) We got the email on January 30, and my life has been all downhill from there. 
 
 Thanks to the organizers, Two Sigma, particularly @truell and @sydriax for their amazing hard work on this project. Thanks to Josh Klun for sending out the email and running the Nerdery server. Thanks to @nmalaguti for the excellent tuturial that really ramped me up quickly on the basics. Thanks to the competitors who released their code after the competition was over and all the amazing writeups; it really helped me to clarify my thinking.
 
@@ -89,7 +89,7 @@ The Nerdery winter code challenge is to submit a bot by the week of February 20.
 
 Since the Nerdery competition happened after the main Halite competition was over, there were some questions around using the code released by other competitors within our own games. The word arrived from on high: please don't submit somebody else's bot, but feel free to be inspired. Nerd's honor.
 
-My final few versions that I experimented with during the weekend of February 18 were inspired heavily by the ['gold bot'](http://braino.org/thoughts/halite_the_simple_way.html) and Erdman's [third place bot](https://github.com/erdman/erdman-halite-bots/blob/master/README.md). Erdman's bot is in Python, while my submission is ruby; that said, I 'borrowed' his logic and weighing algorithms heavily for my final submission.
+My final few versions that I experimented with during the weekend of February 18 were inspired heavily by the ['gold bot'](http://braino.org/thoughts/halite_the_simple_way.html) and Erdman's [third place bot](https://github.com/erdman/erdman-halite-bots/blob/master/README.md). Erdman's bot is in Python, while my submission is ruby; that said, I was inspired by his logic and weighing algorithms heavily for my final submission.
 
 The process of building out this final bot is documented in the `/gold` and `/hungry_v*` directories; the final submission is in the `/jheilema` directory. 
 
@@ -143,7 +143,7 @@ Enemy sites and 0-production sites are unpathable and are excluded from this alg
 
 Once the algorithm reaches friendly sites, it stops calculating cost as a function of strength/production; it starts being a much simpler calculation of `score + 0.2*distance^2` from a border. Each time a friendly site is added back into the queue, the distance value is increased. The site production is used as a tiebreaker in case the degraded score is equivalent, since it's better to move over a lower production site than a higher one.
 
-Since empty neutral sites next to enemies are scored negatively, this pretty automatically starts moving pieces towards battlefronts.
+Empty neutral sites next to enemies are scored negatively; this pretty automatically starts moving pieces towards battlefronts.
 
 Once all the pieces on the board have scores assigned, the bot creates a 'plan of attack' for taking border pieces in the most efficient way possible. This starts on line 125 of the Decisionmaker. Erdman calls this 'redlight/greenlight'. Essentially it allows the bot to decide if a collection of pieces have the strength to take a border piece if they're all combined together.
 
@@ -165,6 +165,16 @@ Eventually it might have a structure that looks like this:
 }
 ```
 
-Once the tree has been constructed, each 'branch' of the tree is compared to it's root site. The tree is walked one level at a time, closest to furthest, evaluating at each level to see if there's enough collected strength to take over the root site. If there is, then the level of the tree being evaluated is given the 'greenlight' and begins automatically moving forward toward the border, collecting the closer levels along the way.
+Once the tree has been constructed, each 'branch' of the tree is compared to it's root neutral site. The tree is walked one level at a time, closest to furthest, evaluating at each level to see if there's enough collected strength to take over the root site. If there is, then the level of the tree being evaluated is given the 'greenlight' and begins automatically moving forward toward the border, collecting the closer levels along the way.
 
+### Performance & Outcomes
 
+During the final weekend I worked through about 5 different versions of this final bot, debugging and playtesting against Shummie's final bot and a couple of my older bots. I used a control of Erdman's bot in the same setup with the same seeds; you can see how it works in `laboratory.sh`. In that setup, Erdman's bot consistently wins ~75-80% of games, while my final bot wins somewhere around 65% of games with the same seeds & enemies.
+
+My bot has a couple of bugs related to overkill that I wasn't able to track down. Shummie's bot pretty consistently wins against mine in a head-to-head battle when strength and production are equal. 
+
+I made a couple of improvements over Erdman's original, some that also still have bugs. If the bot is walled off with nowhere else to expand, it will target the weakest enemy to break through a wall, rather than a random one. If it's walled off and there's one enemy left, and current total strength is less than the enemy but production is more, it will 'still' until strength is more. It's not perfect, and it loses a lot of strength to cap because I'm not doing anything smart about moving capped pieces to lower production areas or edges.
+
+It was, if I may say, devastating in the Nerdery games. 
+
+Thanks again to Josh Klun for setting up the Nerdery servers, thanks to the Halite organizers; GG to all the competitors. See you at the next game!
